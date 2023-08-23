@@ -316,7 +316,7 @@ local function showHelpMenu()
     if TIME_PASSED == 0 then
         ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
         addMessage(ac.getCarName(0), 0);
-        addMessage('Dexter is here boi' .. timePassed, 2);
+        addMessage('Dexter is here boi' .. TIME_PASSED);
     end
 end
 
