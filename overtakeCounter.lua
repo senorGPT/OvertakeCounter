@@ -95,9 +95,11 @@ CONFIG.messages = {
     }
 }
 
+-- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
+-- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B'
 CONFIG.controls = {
-    adjustUI = { key = ac.KeyIndex.B, name = 'B' },
-    resetVehicle = { key = ac.KeyIndex.Delete, name = 'Delete' }
+    adjustUI = { key = ac.KeyIndex.B, keyName = 'B' },
+    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete' }
 }
 
 CONFIG.requiredSpeed = 95                   -- required speed for the counter to start at
@@ -156,7 +158,71 @@ end
 --                                                  GLOBAL VARS                                                         --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
-local uiCustomPos, TIME_PASSED = vec2(0, 0), 0
+-- note, am not following Lua naming convention: uppercase variable names do NOT represent constants, rather globals.
+local uiCustomPos = vec2(0, 0)
+
+local TIME_PASSED = 0
+local KEYPRESS_EVENTS = {}
+local LAST_KEY_STATE = nil
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--                                                HELPER FUNCS                                                          --
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+local function showHelpMenu()
+    -- only show help menu for the start of the script
+    if TIME_PASSED == 0 then
+        ac.debug("[STATUS]", "running...")
+        ac.debug("" .. ac.getCarName(0))
+        --addMessage(ac.getCarName(0), 0)
+        --addMessage('Dexter is here boi' .. timePassed, 2)
+    end
+end
+
+local function keypressListeners()
+    for keypressEvent, keypressData in pairs(KEYPRESS_EVENTS) do
+        local isKeyPressedDown = ac.isKeyDown(keypressData.key)
+
+        if isKeyPressedDown and LAST_KEY_STATE ~= keypressData.keyName --[[ inline comment :) ]] then
+            -- call callback here
+            keypressData.event()
+        elseif not isKeyPressedDown then
+            LAST_KEY_STATE = nil -- reset hold-down button tracking
+        end
+    end
+end
+
+
+-- KEYPRESS EVENTS --
+local function keypressEventHelpMenu()
+    -- check if the playeer toggled moving the UI around
+end
+
+local function keypressEventResetVehicle()
+    -- check if the playeer toggled moving the UI around
+end
+
+KEYPRESS_EVENTS = {
+    adjustUI = {
+        event = keypressEventHelpMenu,
+        name  = 'adjustUI',
+        key = CONFIG.controls.adjustUI.key,
+        keyName = CONFIG.controls.adjustUI.keyName
+    },
+    resetVehicle = {
+        event = keypressEventResetVehicle,
+        name = 'Reset Vehicle',
+        key = CONFIG.controls.resetVehicle.key,
+        keyName = CONFIG.controls.resetVehicle.keyName
+    }
+}
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -179,13 +245,8 @@ function script.update(deltaTime)
     -- deltaTime is the time elapsed since the last frame in seconds
     -- Update plugin logic here
 
-    -- only show help menu for the start of the script
-    if TIME_PASSED == 0 then
-        ac.debug("[STATUS]", "running...")
-        ac.debug("" .. ac.getCarName(0))
-        --addMessage(ac.getCarName(0), 0)
-        --addMessage('Dexter is here boi' .. timePassed, 2)
-    end
+    showHelpMenu()
+    keypressListeners()
 
     local player = ac.getCarState(1)
     local sim = ac.getSim()
