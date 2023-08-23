@@ -5,8 +5,7 @@
 -- Written By: Dexter
 -- Discord: BigDaddyDex#0001
 -- Server: discord.gg/UwH68aHMPn
-
-
+--
 ----------------------------------------------------------------------------------------------------------------------------
 --========================================================================================================================--
 ----------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +149,7 @@ function Run:reset()
         fastestSpeed = 0
     }
 end
+
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
@@ -176,23 +176,18 @@ local LAST_KEY_STATE = nil
 
 
 
--- TODO: rename to LOGIC FUNCS?
+-- TODO: rename to SCRIPT FUNCS?
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --                                                HELPER FUNCS                                                          --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
+--                                                                                                                      --
+--======================================================================================================================--
+--                                                LOGIC FUNCS                                                           --
+--======================================================================================================================--
 local function booleanToString(target)
     return target and "Enabled" or "Disabled"
-end
-
-local function showHelpMenu()
-    -- only show help menu for the start of the script
-    if TIME_PASSED == 0 then
-        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
-        --addMessage(ac.getCarName(0), 0)
-        --addMessage('Dexter is here boi' .. timePassed, 2)
-    end
 end
 
 local function keypressListeners()
@@ -295,6 +290,35 @@ KEYPRESS_EVENTS = {
         IIFE = nil
     }
 }
+--======================================================================================================================--
+--                                                   UI FUNCS                                                           --
+--======================================================================================================================--
+-- TODO: rewrite this whonya
+local messages = {}
+local function addMessage(text)
+    for i = math.min(#messages + 1, 4), 2, -1 do
+        messages[i] = messages[i - 1]
+        messages[i].targetPos = i
+    end
+    messages[1] = { text = text, age = 0, targetPos = 1, currentPos = 1 }
+end
+
+local function updateMessages(dt)
+    for i = 1, #messages do
+        local m = messages[i]
+        m.age = m.age + dt
+        m.currentPos = math.applyLag(m.currentPos, m.targetPos, 0.8, dt)
+    end
+end
+
+local function showHelpMenu()
+    -- only show help menu for the start of the script
+    if TIME_PASSED == 0 then
+        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
+        addMessage(ac.getCarName(0), 0);
+        addMessage('Dexter is here boi' .. timePassed, 2);
+    end
+end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -331,6 +355,7 @@ end
 function script.drawUI()
     -- TODO: try .getUI() instead
     local uiState = ac.getUiState()
+    updateMessages(uiState.dt)
 
     ui.beginTransparentWindow('overtakeScore', vec2(uiState.windowSize.x * 0.5 - 600, 100), vec2(1400, 1400), true)
     --ui.beginTransparentWindow('overtakeScore', uiCustomPos, vec2(1400, 1400), true)
@@ -340,6 +365,16 @@ function script.drawUI()
     ui.pushFont(ui.Font.Title)
     ui.text('Overtake Counter :Dexter')
     ui.textColored('Personal Best:', rgbm.new(255, 0, 0, 1))
+
+
+    ui.offsetCursorY(20)
+    local startPos = ui.getCursor()
+    for i = 1, #messages do
+        local m = messages[i]
+        local f = math.saturate(4 - m.currentPos) * math.saturate(8 - m.age)
+        ui.setCursor(startPos + vec2(20 + math.saturate(1 - m.age * 10) ^ 2 * 100, (m.currentPos - 1) * 30))
+        ui.textColored(m.text, rgbm(0, 255, 0, f))
+    end
 
     ui.endTransparentWindow()
 end
