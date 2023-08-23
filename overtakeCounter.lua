@@ -99,7 +99,8 @@ CONFIG.messages = {
 -- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B'
 CONFIG.controls = {
     adjustUI = { key = ac.KeyIndex.B, keyName = 'B', message = 'UI Move mode ' },
-    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete', message = 'Vehicle Reset & Re-Oriented!' }
+    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete', message = 'Vehicle Reset & Re-Oriented!' },
+    toggleSounds = { key = ac.KeyIndex.M, keyName = 'M', message = 'Sounds ' }
 }
 
 CONFIG.requiredSpeed = 95                   -- required speed for the counter to start at
@@ -241,7 +242,12 @@ local function keypressEventResetVehicle(args)
 end
 
 local function keypressEventToggleSounds(args)
+    ac.debug("[KEYPRESS] - toggleSounds", args.keypressCounter)
+    args.keypressCounter = args.keypressCounter + 1
 
+    -- addMessage(args.message .. booleanToString(args.toggled), -1)
+
+    -- TODO: whole tracking keystates and last key pressed stuff
 end
 
 KEYPRESS_EVENTS = {
@@ -270,7 +276,16 @@ KEYPRESS_EVENTS = {
         IIFE = nil
     },
     toggleSounds = {
-
+        event = keypressEventToggleSounds,
+        args = {
+            toggled = false,
+            message = CONFIG.controls.toggleSounds.message,
+            keypressCounter = 1
+        },
+        name  = 'toggleSounds',
+        key = CONFIG.controls.toggleSounds.key,
+        keyName = CONFIG.controls.toggleSounds.keyName,
+        IIFE = nil
     }
 }
 
@@ -299,7 +314,7 @@ function script.update(deltaTime)
 
     keypressListeners()
 
-    local player = ac.getCarState(1)
+    -- local player = ac.getCarState(1)
     local sim = ac.getSim()
 
     TIME_PASSED = TIME_PASSED + deltaTime
