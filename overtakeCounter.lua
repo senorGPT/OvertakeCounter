@@ -187,7 +187,7 @@ local function showHelpMenu()
 end
 
 local function keypressListeners()
-    for keypressEvent, keypressData in pairs(KEYPRESS_EVENTS) do
+    for _, keypressData in pairs(KEYPRESS_EVENTS) do
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
         if isKeyPressedDown and LAST_KEY_STATE ~= keypressData.keyName --[[ inline comment :) ]] then
@@ -199,14 +199,18 @@ local function keypressListeners()
     end
 end
 
-
+local tempcounter_1, tempcounter_2 = 1, 1
 -- KEYPRESS EVENTS --
 local function keypressEventHelpMenu()
     -- check if the playeer toggled moving the UI around
+    ac.debug("helpmenu keypress count: " .. tempcounter_1)
+    tempcounter_1 = tempcounter_1 + 1
 end
 
 local function keypressEventResetVehicle()
     -- check if the playeer toggled moving the UI around
+    ac.debug("reset vehicle keypress count: " .. tempcounter_2)
+    tempcounter_2 = tempcounter_2 + 1
 end
 
 KEYPRESS_EVENTS = {
@@ -246,6 +250,7 @@ function script.update(deltaTime)
     -- Update plugin logic here
 
     showHelpMenu()
+
     keypressListeners()
 
     local player = ac.getCarState(1)
