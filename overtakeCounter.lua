@@ -99,9 +99,21 @@ CONFIG.levels = {
 -- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
 -- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B', 'UI Move mode '
 CONFIG.controls = {
-    adjustUI = { key = ac.KeyIndex.B, keyName = 'B', message = 'UI Move mode ' },
-    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete', message = 'Vehicle Reset & Re-Oriented!' },
-    toggleSounds = { key = ac.KeyIndex.M, keyName = 'M', message = 'Sounds ' }
+    adjustUI = {
+        key = ac.KeyIndex.B,
+        keyName = 'B',
+        message = 'UI Move mode '
+    },
+    resetVehicle = {
+        key = ac.KeyIndex.Delete,
+        keyName = 'Delete',
+        message = 'Vehicle Reset & Re-Oriented!'
+    },
+    toggleSounds = {
+        key = ac.KeyIndex.M,
+        keyName = 'M',
+        message = 'Sounds '
+    }
 }
 
 CONFIG.requiredSpeed = 95                   -- required speed for the counter to start at
@@ -165,7 +177,7 @@ end
 local UI_POS = vec2(0, 0)
 
 -- TODO: should we make a Client class to hold this kind of information?
-local TIME_PASSED = 0
+local TIME_ELAPSED = 0
 
 local KEYPRESS_EVENTS = {}
 local LAST_KEY_STATE = nil
@@ -182,7 +194,37 @@ local LAST_KEY_STATE = nil
 --                                                HELPER FUNCS                                                          --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
---                                                                                                                      --
+--
+--======================================================================================================================--
+--                                                   UI FUNCS                                                           --
+--======================================================================================================================--
+-- TODO: rewrite this whonya
+local messages = {}
+local function addMessage(text)
+    for i = math.min(#messages + 1, 4), 2, -1 do
+        messages[i] = messages[i - 1]
+        messages[i].targetPos = i
+    end
+    messages[1] = { text = text, age = 0, targetPos = 1, currentPos = 1 }
+end
+
+local function updateMessages(dt)
+    for i = 1, #messages do
+        local m = messages[i]
+        m.age = m.age + dt
+        m.currentPos = math.applyLag(m.currentPos, m.targetPos, 0.8, dt)
+    end
+end
+
+local function showHelpMenu()
+    -- only show help menu for the start of the script
+    if TIME_ELAPSED == 0 then
+        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
+        addMessage(ac.getCarName(0), 0);
+        addMessage('Dexter is here boi' .. TIME_ELAPSED);
+    end
+end
+                                                                                                                      --
 --======================================================================================================================--
 --                                                LOGIC FUNCS                                                           --
 --======================================================================================================================--
@@ -290,35 +332,6 @@ KEYPRESS_EVENTS = {
         IIFE = nil
     }
 }
---======================================================================================================================--
---                                                   UI FUNCS                                                           --
---======================================================================================================================--
--- TODO: rewrite this whonya
-local messages = {}
-local function addMessage(text)
-    for i = math.min(#messages + 1, 4), 2, -1 do
-        messages[i] = messages[i - 1]
-        messages[i].targetPos = i
-    end
-    messages[1] = { text = text, age = 0, targetPos = 1, currentPos = 1 }
-end
-
-local function updateMessages(dt)
-    for i = 1, #messages do
-        local m = messages[i]
-        m.age = m.age + dt
-        m.currentPos = math.applyLag(m.currentPos, m.targetPos, 0.8, dt)
-    end
-end
-
-local function showHelpMenu()
-    -- only show help menu for the start of the script
-    if TIME_PASSED == 0 then
-        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
-        addMessage(ac.getCarName(0), 0);
-        addMessage('Dexter is here boi' .. TIME_PASSED);
-    end
-end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -340,7 +353,7 @@ end
 function script.update(deltaTime)
     -- deltaTime is the time elapsed since the last frame in seconds
     -- Update plugin logic here
-    ac.debug('[TIME_PASSED]', TIME_PASSED)
+    ac.debug('[TIME_ELAPSED]', TIME_ELAPSED)
 
     showHelpMenu()
 
@@ -349,7 +362,7 @@ function script.update(deltaTime)
     -- local player = ac.getCarState(1)
     -- local sim = ac.getSim()
 
-    TIME_PASSED = TIME_PASSED + deltaTime
+    TIME_ELAPSED = TIME_ELAPSED + deltaTime
 end
 
 function script.drawUI()
@@ -358,7 +371,7 @@ function script.drawUI()
     updateMessages(uiState.dt)
 
     ui.beginTransparentWindow('overtakeScore', vec2(uiState.windowSize.x * 0.5 - 600, 100), vec2(1400, 1400), true)
-    --ui.beginTransparentWindow('overtakeScore', uiCustomPos, vec2(1400, 1400), true)
+    --ui.beginTransparentWindow('overtakeScore', UI_POS, vec2(1400, 1400), true)
     ui.beginOutline()
 
     -- FUNCS GO HERE :Dexter
