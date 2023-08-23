@@ -98,8 +98,8 @@ CONFIG.messages = {
 -- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
 -- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B'
 CONFIG.controls = {
-    adjustUI = { key = ac.KeyIndex.B, keyName = 'B' },
-    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete' }
+    adjustUI = { key = ac.KeyIndex.B, keyName = 'B', message = 'UI Move mode ' },
+    resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete', message = 'Vehicle Reset & Re-Oriented!' }
 }
 
 CONFIG.requiredSpeed = 95                   -- required speed for the counter to start at
@@ -159,7 +159,7 @@ end
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
 -- note, am not following Lua naming convention: uppercase variable names do NOT represent constants, rather globals.
-local uiCustomPos = vec2(0, 0)
+local UI_POS = vec2(0, 0)
 
 local TIME_PASSED = 0
 local KEYPRESS_EVENTS = {}
@@ -176,11 +176,14 @@ local LAST_KEY_STATE = nil
 --                                                HELPER FUNCS                                                          --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
+local function booleanToString(target)
+    return target and "Enabled" or "Disabled"
+end
+
 local function showHelpMenu()
     -- only show help menu for the start of the script
     if TIME_PASSED == 0 then
-        ac.debug("[STATUS]", "running...")
-        ac.debug("" .. ac.getCarName(0))
+        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
         --addMessage(ac.getCarName(0), 0)
         --addMessage('Dexter is here boi' .. timePassed, 2)
     end
@@ -191,40 +194,83 @@ local function keypressListeners()
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
         if isKeyPressedDown and LAST_KEY_STATE ~= keypressData.keyName --[[ inline comment :) ]] then
-            -- call callback here
-            keypressData.event()
+            keypressData.event(keypressData.args)
+            if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
         elseif not isKeyPressedDown then
+            -- TODO: need to rework logic for resetting key state, as this is faulty AF
             LAST_KEY_STATE = nil -- reset hold-down button tracking
         end
     end
 end
 
-local tempcounter_1, tempcounter_2 = 1, 1
--- KEYPRESS EVENTS --
-local function keypressEventHelpMenu()
-    -- check if the playeer toggled moving the UI around
-    ac.debug("helpmenu keypress count: " .. tempcounter_1)
-    tempcounter_1 = tempcounter_1 + 1
+-- TODO: not sure about my naming convention here...
+-- probably should be more like: clickListenerAdjustUI
+local function adjustUiMouseClickListener(args)
+    if ui.mouseClicked(ui.MouseButton.Left) and args.toggled then
+        ac.debug("[CLICK] - adjustUI", args.clickCounter)
+        args.clickCounter = args.clickCounter + 1
+
+        UI_POS = ui.mousePos()
+    end
 end
 
-local function keypressEventResetVehicle()
+--======================================================================================================================--
+--                                              KEYPRESS EVENTS                                                         --
+--======================================================================================================================--
+local function keypressEventAdjustUI(args)
     -- check if the playeer toggled moving the UI around
-    ac.debug("reset vehicle keypress count: " .. tempcounter_2)
-    tempcounter_2 = tempcounter_2 + 1
+    ac.debug("[KEYPRESS] - adjustUI", args.keypressCounter)
+    args.keypressCounter = args.keypressCounter + 1
+
+    args.toggled = not args.toggled
+    -- addMessage(args.message .. booleanToString(args.toggled), -1)
+
+    -- TODO: whole tracking keystates and last key pressed stuff
+end
+
+local function keypressEventResetVehicle(args)
+    local player = ac.getCarState(1)
+
+    ac.debug("[KEYPRESS] - resetVehicle", args.keypressCounter)
+    args.keypressCounter = args.keypressCounter + 1
+
+    physics.setCarPosition(0, player.position, ac.getCameraForward())
+    --addMessage(args.message, -1)
+
+    -- TODO: whole tracking keystates and last key pressed stuff
+end
+
+local function keypressEventToggleSounds(args)
+
 end
 
 KEYPRESS_EVENTS = {
     adjustUI = {
-        event = keypressEventHelpMenu,
+        event = keypressEventAdjustUI,
+        args = {
+            toggled = false,
+            message = CONFIG.controls.adjustUI.message,
+            keypressCounter = 1,
+            clickCounter = 1
+        },
         name  = 'adjustUI',
         key = CONFIG.controls.adjustUI.key,
-        keyName = CONFIG.controls.adjustUI.keyName
+        keyName = CONFIG.controls.adjustUI.keyName,
+        IIFE = adjustUiMouseClickListener
     },
     resetVehicle = {
         event = keypressEventResetVehicle,
+        args = {
+            keypressCounter = 1,
+            message = CONFIG.controls.resetVehicle.message,
+        },
         name = 'Reset Vehicle',
         key = CONFIG.controls.resetVehicle.key,
-        keyName = CONFIG.controls.resetVehicle.keyName
+        keyName = CONFIG.controls.resetVehicle.keyName,
+        IIFE = nil
+    },
+    toggleSounds = {
+
     }
 }
 
@@ -414,7 +460,7 @@ function script.drawUI()
 
         -- original
         -- ui.beginTransparentWindow('overtakeScore', vec2(uiState.windowSize.x * 0.5 - 600, 100), vec2(1400, 1400), true)
-        ui.beginTransparentWindow('overtakeScore', uiCustomPos, vec2(1400, 1400), true)
+        ui.beginTransparentWindow('overtakeScore', UI_POS, vec2(1400, 1400), true)
         ui.beginOutline()
 
         ui.pushStyleVar(ui.StyleVar.Alpha, 1 - 1)
