@@ -51,8 +51,54 @@ CONFIG.messages = {
     }
 }
 
+CONFIG.sounds = {
+    overtake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    closeOvertake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    superCloseOvertake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    personalBest = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3'
+}
+
+CONFIG.levels = {
+    {
+        amount  = 0,
+        name    = 'Drivers Aid',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+    {
+        amount  = 1000,
+        name    = 'Gettin There',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+    {
+        amount  = 10000,
+        name    = 'Duckin N\' Dodgin',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+    {
+        amount  = 100000,
+        name    = 'Fast & Furious',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+    {
+        amount  = 1000000,
+        name    = 'Van Diesel',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+    {
+        amount  = 10000000,
+        name    = 'BaSeD',
+        sound   = CONFIG.sounds.overtake,
+        color   = nil
+    },
+}
+
 -- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
--- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B'
+-- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B', 'UI Move mode '
 CONFIG.controls = {
     adjustUI = { key = ac.KeyIndex.B, keyName = 'B', message = 'UI Move mode ' },
     resetVehicle = { key = ac.KeyIndex.Delete, keyName = 'Delete', message = 'Vehicle Reset & Re-Oriented!' },
@@ -204,6 +250,8 @@ local function keypressEventToggleSounds(args)
     ac.debug("[KEYPRESS] - toggleSounds", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
 
+    args.toggled = not args.toggled
+    -- TODO: create a function to call that runs until args.toggled is turned off?? might not have to
     -- addMessage(args.message .. booleanToString(args.toggled), -1)
 
     -- TODO: whole tracking keystates and last key pressed stuff
@@ -268,6 +316,7 @@ end
 function script.update(deltaTime)
     -- deltaTime is the time elapsed since the last frame in seconds
     -- Update plugin logic here
+    ac.debug('[TIME_PASSED]', TIME_PASSED)
 
     showHelpMenu()
 
@@ -290,6 +339,7 @@ function script.drawUI()
     -- FUNCS GO HERE :Dexter
     ui.pushFont(ui.Font.Title)
     ui.text('Overtake Counter :Dexter')
+    ui.textColored('Personal Best:', rgbm.new(255, 0, 0, 1))
 
     ui.endTransparentWindow()
 end
