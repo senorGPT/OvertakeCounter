@@ -301,11 +301,10 @@ local function keypressListeners()
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
         if isKeyPressedDown and CLIENT:canUserPressButton(keypressData.keyName) --[[ inline comment :) ]] then
+            -- initiate callback with specified callback args
             keypressData.event(keypressData.args)
-
-            CLIENT.last_key.key = keypressData.keyName
-            CLIENT.last_key.time = CLIENT.time_elapsed
-
+            CLIENT:setKey(keypressData.keyName, CLIENT.time_elapsed)
+            -- call immediatly invoked function expression if set
             if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
         end
     end
@@ -331,9 +330,7 @@ local function keypressEventAdjustUI(args)
     args.keypressCounter = args.keypressCounter + 1
 
     args.toggled = not args.toggled
-    -- addMessage(args.message .. booleanToString(args.toggled), -1)
-
-    -- TODO: whole tracking keystates and last key pressed stuff
+    addMessage(args.message .. booleanToString(args.toggled))
 end
 
 local function keypressEventResetVehicle(args)
@@ -343,9 +340,7 @@ local function keypressEventResetVehicle(args)
     args.keypressCounter = args.keypressCounter + 1
 
     physics.setCarPosition(0, player.position, ac.getCameraForward())
-    --addMessage(args.message, -1)
-
-    -- TODO: whole tracking keystates and last key pressed stuff
+    addMessage(args.message)
 end
 
 local function keypressEventToggleSounds(args)
@@ -353,48 +348,45 @@ local function keypressEventToggleSounds(args)
     args.keypressCounter = args.keypressCounter + 1
 
     args.toggled = not args.toggled
-    -- TODO: create a function to call that runs until args.toggled is turned off?? might not have to
-    -- addMessage(args.message .. booleanToString(args.toggled), -1)
-
-    -- TODO: whole tracking keystates and last key pressed stuff
+    addMessage(args.message .. booleanToString(args.toggled))
 end
 
 KEYPRESS_EVENTS = {
-    adjustUI = {
-        event = keypressEventAdjustUI,
-        args = {
-            toggled = false,
-            message = CONFIG.controls.adjustUI.message,
+    adjustUI        = {
+        event   = keypressEventAdjustUI,
+        args    = {
+            toggled         = false,
+            message         = CONFIG.controls.adjustUI.message,
             keypressCounter = 1,
-            clickCounter = 1
+            clickCounter    = 1
         },
-        name  = 'adjustUI',
-        key = CONFIG.controls.adjustUI.key,
+        name    = 'adjustUI',
+        key     = CONFIG.controls.adjustUI.key,
         keyName = CONFIG.controls.adjustUI.keyName,
-        IIFE = adjustUiMouseClickListener
+        IIFE    = adjustUiMouseClickListener
     },
-    resetVehicle = {
-        event = keypressEventResetVehicle,
-        args = {
+    resetVehicle    = {
+        event   = keypressEventResetVehicle,
+        args    = {
             keypressCounter = 1,
-            message = CONFIG.controls.resetVehicle.message,
+            message         = CONFIG.controls.resetVehicle.message,
         },
-        name = 'Reset Vehicle',
-        key = CONFIG.controls.resetVehicle.key,
+        name    = 'Reset Vehicle',
+        key     = CONFIG.controls.resetVehicle.key,
         keyName = CONFIG.controls.resetVehicle.keyName,
-        IIFE = nil
+        IIFE    = nil
     },
-    toggleSounds = {
-        event = keypressEventToggleSounds,
-        args = {
-            toggled = false,
-            message = CONFIG.controls.toggleSounds.message,
+    toggleSounds    = {
+        event   = keypressEventToggleSounds,
+        args    = {
+            toggled         = false,
+            message         = CONFIG.controls.toggleSounds.message,
             keypressCounter = 1
         },
-        name  = 'toggleSounds',
-        key = CONFIG.controls.toggleSounds.key,
+        name    = 'toggleSounds',
+        key     = CONFIG.controls.toggleSounds.key,
         keyName = CONFIG.controls.toggleSounds.keyName,
-        IIFE = nil
+        IIFE    = nil
     }
 }
 
