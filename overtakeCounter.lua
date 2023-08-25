@@ -258,14 +258,17 @@ function Client:canPressButton(targetButton)
     -- no key has been pressed
     if self.last_key.key == nil then
         returnBoolean = true
+        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
         returnBoolean = true
+        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key ~= targetButton')
     end
     -- the timeout for the keypress has elapsed
     if self:hasKeypressTimedOut() then
         returnBoolean = true
+        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
     end
     ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
     return returnBoolean
@@ -285,8 +288,9 @@ function Client:setKey(key, time)
 end
 
 function Client:keypressTimeOutHandler()
-    ac.debug('[KEYPRESS TIMER]', '' .. tostring(self.last_key.time))
+    ac.debug('[KEYPRESS_TIMER]', tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
+        ac.debug('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
         self:resetLastKey()
     end
 end
@@ -367,6 +371,7 @@ end
 
 local function keypressListeners()
     for _, keypressData in pairs(KEYPRESS_EVENTS) do
+        -- TODO i dont think this needs to be a variable
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
         if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
