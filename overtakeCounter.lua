@@ -245,7 +245,10 @@ end
 
 function Client:hasKeypressTimedOut()
     local returnBoolean = false
-    if self.last_key.key == nil then returnBoolean = true end
+    if self.last_key.key == nil then
+        ac.debug('[HAS_KEYPRESS_TIMEDOUT]', true)
+        return true
+    end
     if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
         returnBoolean = true
     end
@@ -259,6 +262,8 @@ function Client:canPressButton(targetButton)
     if self.last_key.key == nil then
         returnBoolean = true
         ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
+        ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
+        return true
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
@@ -295,7 +300,7 @@ function Client:keypressTimeOutHandler()
     end
 end
 
---TODO rewrite as in Timer class
+--TODO rewrite in Timer class
 -- function Client:timerTimeOutHandler()
 --     for timerName, timerData in pairs(self.timers) do
 --         if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
