@@ -171,6 +171,31 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
+--                                                    TIMER CLASS                                                       --
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+local Timer = {}
+function Timer:new()
+    local stats = {
+
+    }
+    self.__index = self
+    return setmetatable(stats, self)
+end
+
+function Timer:reset()
+    self.stats = {
+
+    }
+end
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
 --                                                    CLIENT CLASS                                                      --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
@@ -194,33 +219,37 @@ function Client:new()
     self.__index = self
     return setmetatable(instance, self)
 end
-
+-- TODO remove this code
 function Client:isTimerActive(timerName)
     return self.timers[timerName].time ~= 0
 end
 
 function Client:hasKeypressTimedOut()
+    local returnBoolean = false
     if self.last_key.key == nil then return true end
     if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
-        return true
+        returnBoolean = true
     end
-    return false
+    ac.debug('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
+    return returnBoolean
 end
 
 function Client:canPressButton(targetButton)
+    local returnBoolean = false
     -- no key has been pressed
     if self.last_key.key == nil then
-        return true
+        returnBoolean = true
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
-        return true
+        returnBoolean = true
     end
     -- the timeout for the keypress has elapsed
     if self:hasKeypressTimedOut() then
-        return true
+        returnBoolean = true
     end
-    return false
+    ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
+    return returnBoolean
 end
 
 function Client:resetLastKey()
