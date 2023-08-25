@@ -237,11 +237,13 @@ function Client:setKey(key, time)
 end
 
 function Client:keypressTimeOutHandler()
+    ac.debug('[KEYPRESS TIMER]', '' .. self.last_key.time)
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
         self:resetLastKey()
     end
 end
 
+--TODO rewrite as a class
 function Client:timerTimeOutHandler()
     for timerName, timerData in pairs(self.timers) do
         if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
