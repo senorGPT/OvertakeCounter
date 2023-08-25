@@ -176,17 +176,36 @@ end
 --------------------------------------------------------------------------------------------------------------------------
 local Timer = {}
 function Timer:new()
-    local stats = {
-
+    local instance = {
+        active = false,
+        time = 0,
+        timeOut = 0,
+        callback = nil
     }
     self.__index = self
-    return setmetatable(stats, self)
+    return setmetatable(instance, self)
 end
 
-function Timer:reset()
-    self.stats = {
+function Timer:start(currentTime, timeOutSeconds, callback)
+    self.active = true
+    self.time = currentTime
+    self.timeOut = currentTime + timeOutSeconds
+    if callback then
+        self.callback = callback
+    end
+end
 
+function Timer:isActive()
+    return self.active
+end
+
+function Timer:reset(hardReset)
+    self.instance = {
+        active = false,
+        time = 0,
+        timeOut = 0
     }
+    if hardReset then self.instance.callback = nil end
 end
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -266,21 +285,21 @@ function Client:setKey(key, time)
 end
 
 function Client:keypressTimeOutHandler()
-    ac.debug('[KEYPRESS TIMER]', '' .. self.last_key.time)
+    ac.debug('[KEYPRESS TIMER]', '' .. tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
         self:resetLastKey()
     end
 end
 
---TODO rewrite as a class
-function Client:timerTimeOutHandler()
-    for timerName, timerData in pairs(self.timers) do
-        if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
-            timerData.time = 0
-            if timerData.callback then timerData.callback() end
-        end
-    end
-end
+--TODO rewrite as in Timer class
+-- function Client:timerTimeOutHandler()
+--     for timerName, timerData in pairs(self.timers) do
+--         if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
+--             timerData.time = 0
+--             if timerData.callback then timerData.callback() end
+--         end
+--     end
+-- end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
