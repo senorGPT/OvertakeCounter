@@ -245,7 +245,7 @@ end
 
 function Client:hasKeypressTimedOut()
     local returnBoolean = false
-    if self.last_key.key == nil then return true end
+    if self.last_key.key == nil then returnBoolean = true end
     if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
         returnBoolean = true
     end
