@@ -51,10 +51,10 @@ CONFIG.messages = {
 }
 
 CONFIG.sounds = {
-    overtake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
-    closeOvertake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
-    superCloseOvertake = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
-    personalBest = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3'
+    overtake            = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    closeOvertake       = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    superCloseOvertake  = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
+    personalBest        = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3'
 }
 
 CONFIG.levels = {
@@ -99,27 +99,27 @@ CONFIG.levels = {
 -- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
 -- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B', 'UI Move mode '
 CONFIG.controls = {
-    adjustUI = {
-        key = ac.KeyIndex.B,
+    adjustUI        = {
+        key     = ac.KeyIndex.B,
         keyName = 'B',
         message = 'UI Move mode '
     },
-    resetVehicle = {
-        key = ac.KeyIndex.Delete,
+    resetVehicle    = {
+        key     = ac.KeyIndex.Delete,
         keyName = 'Delete',
         message = 'Vehicle Reset & Re-Oriented!'
     },
-    toggleSounds = {
-        key = ac.KeyIndex.M,
+    toggleSounds    = {
+        key     = ac.KeyIndex.M,
         keyName = 'M',
         message = 'Sounds '
     }
 }
 
-CONFIG.requiredSpeed = 95                   -- required speed for the counter to start at
-CONFIG.overtakeDistance = 9                 -- overtake distance between the player and other vehicles for it to count as sucessful overtake
-CONFIG.closeOvertakeDistance = 4            -- close overtake distance
-CONFIG.superCloseOvertakeDistance = 1       -- super close overtake distance
+CONFIG.requiredSpeed                = 95    -- required speed for the counter to start at
+CONFIG.overtakeDistance             = 9     -- overtake distance between the player and other vehicles for it to count as sucessful overtake
+CONFIG.closeOvertakeDistance        = 4     -- close overtake distance
+CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
 
 ----------------------------------------------------------------------------------------------------------------------------
 --========================================================================================================================--
@@ -139,7 +139,6 @@ CONFIG.superCloseOvertakeDistance = 1       -- super close overtake distance
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
 local Run = {}
-
 function Run:new()
     local stats = {
         score = 0,
@@ -170,17 +169,83 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
+--                                                    CLIENT CLASS                                                      --
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+local Client = {}
+function Client:new()
+    local instance = {
+        runs = {},
+        best_run = nil,
+        current_run = nil,
+        time_elapsed = 0,
+        ui_pos = vec2(0, 0),
+        last_key = {
+            key = nil,
+            time = nil,
+            timeout = 0.25
+        }
+    }
+    self.__index = self
+    return setmetatable(instance, self)
+end
+
+function Client:hasKeypressTimedOut()
+    if self.last_key.key == nil then return true end
+    if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
+        return true
+    end
+    return false
+end
+
+function Client:canPressButton(targetButton)
+    -- no key has been pressed
+    if self.last_key.key == nil then
+        return true
+    end
+    -- key is different than the last key pressed
+    if self.last_key.key ~= targetButton then
+        return true
+    end
+    -- the timeout for the keypress has elapsed
+    if self:hasKeypressTimedOut() then
+        return true
+    end
+    return false
+end
+
+function Client:resetLastKey()
+    self.last_key = {
+        key = nil,
+        time = nil,
+        timeout = 0.25
+    }
+end
+
+function Client:setKey(key, time)
+    self.last_key.key = key
+    self.last_key.time = time
+end
+
+function Client:keypressTimeOutHandler()
+    if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
+        self:resetLastKey()
+    end
+end
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
 --                                                  GLOBAL VARS                                                         --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
--- note, am not following Lua naming convention: uppercase variable names do NOT represent constants, rather globals.
-local UI_POS = vec2(0, 0)
-
--- TODO: should we make a Client class to hold this kind of information?
-local TIME_ELAPSED = 0
 
 local KEYPRESS_EVENTS = {}
-local LAST_KEY_STATE = nil
+local CLIENT = Client:new()
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -188,7 +253,6 @@ local LAST_KEY_STATE = nil
 
 
 
--- TODO: rename to SCRIPT FUNCS?
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --                                                HELPER FUNCS                                                          --
@@ -218,10 +282,10 @@ end
 
 local function showHelpMenu()
     -- only show help menu for the start of the script
-    if TIME_ELAPSED == 0 then
+    if CLIENT.time_elapsed == 0 then
         ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
-        addMessage(ac.getCarName(0), 0);
-        addMessage('Dexter is here boi' .. TIME_ELAPSED);
+        addMessage(ac.getCarName(0));
+        addMessage('Dexter is here boi' .. CLIENT.time_elapsed);
     end
 end
                                                                                                                       --
@@ -236,12 +300,13 @@ local function keypressListeners()
     for _, keypressData in pairs(KEYPRESS_EVENTS) do
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
-        if isKeyPressedDown and LAST_KEY_STATE ~= keypressData.keyName --[[ inline comment :) ]] then
+        if isKeyPressedDown and CLIENT:canUserPressButton(keypressData.keyName) --[[ inline comment :) ]] then
             keypressData.event(keypressData.args)
+
+            CLIENT.last_key.key = keypressData.keyName
+            CLIENT.last_key.time = CLIENT.time_elapsed
+
             if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
-        elseif not isKeyPressedDown then
-            -- TODO: need to rework logic for resetting key state, as this is faulty AF
-            LAST_KEY_STATE = nil -- reset hold-down button tracking
         end
     end
 end
@@ -253,7 +318,7 @@ local function adjustUiMouseClickListener(args)
         ac.debug("[CLICK] - adjustUI", args.clickCounter)
         args.clickCounter = args.clickCounter + 1
 
-        UI_POS = ui.mousePos()
+        CLIENT.ui_pos = ui.mousePos()
     end
 end
 
@@ -353,16 +418,17 @@ end
 function script.update(deltaTime)
     -- deltaTime is the time elapsed since the last frame in seconds
     -- Update plugin logic here
-    ac.debug('[TIME_ELAPSED]', TIME_ELAPSED)
+    ac.debug('[TIME_ELAPSED]', CLIENT.time_elapsed)
 
     showHelpMenu()
-
     keypressListeners()
+
+    CLIENT:keypressTimeOutHandler()
 
     -- local player = ac.getCarState(1)
     -- local sim = ac.getSim()
 
-    TIME_ELAPSED = TIME_ELAPSED + deltaTime
+    CLIENT.time_elapsed = CLIENT.time_elapsed + deltaTime
 end
 
 function script.drawUI()
@@ -371,7 +437,7 @@ function script.drawUI()
     updateMessages(uiState.dt)
 
     ui.beginTransparentWindow('overtakeScore', vec2(uiState.windowSize.x * 0.5 - 600, 100), vec2(1400, 1400), true)
-    --ui.beginTransparentWindow('overtakeScore', UI_POS, vec2(1400, 1400), true)
+    --ui.beginTransparentWindow('overtakeScore', CLIENT.ui_pos, vec2(1400, 1400), true)
     ui.beginOutline()
 
     -- FUNCS GO HERE :Dexter
