@@ -290,6 +290,7 @@ end
 function Client:setKey(key, time)
     self.last_key.key = key
     self.last_key.time = time
+    ac.debug('[SET_KEY]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
 end
 
 function Client:keypressTimeOutHandler()
