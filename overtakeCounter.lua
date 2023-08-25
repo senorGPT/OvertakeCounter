@@ -265,6 +265,7 @@ local CLIENT = Client:new()
 -- TODO: rewrite this whonya
 local messages = {}
 local function addMessage(text)
+    ac.debug("[LAST_MSG]", text)
     for i = math.min(#messages + 1, 4), 2, -1 do
         messages[i] = messages[i - 1]
         messages[i].targetPos = i
