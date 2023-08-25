@@ -301,7 +301,7 @@ local function keypressListeners()
     for _, keypressData in pairs(KEYPRESS_EVENTS) do
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
-        if isKeyPressedDown and CLIENT:canUserPressButton(keypressData.keyName) --[[ inline comment :) ]] then
+        if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
             -- initiate callback with specified callback args
             keypressData.event(keypressData.args)
             CLIENT:setKey(keypressData.keyName, CLIENT.time_elapsed)
