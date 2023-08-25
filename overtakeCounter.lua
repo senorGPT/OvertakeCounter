@@ -145,7 +145,8 @@ function Run:new()
         combo = 1,
         time = 0,
         overtakes = 0,
-        fastestSpeed = 0
+        fastestSpeed = 0,
+        active = false
     }
     self.__index = self
     return setmetatable(stats, self)
@@ -157,7 +158,8 @@ function Run:reset()
         combo = 1,
         time = 0,
         overtakes = 0,
-        fastestSpeed = 0
+        fastestSpeed = 0,
+        active = false
     }
 end
 
@@ -183,11 +185,18 @@ function Client:new()
         last_key = {
             key = nil,
             time = nil,
-            timeout = 0.25
+            timeout = 1
+        },
+        timers = {
+            slow = { time = 0, timeout = 5, callback = nil }
         }
     }
     self.__index = self
     return setmetatable(instance, self)
+end
+
+function Client:isTimerActive(timerName)
+    return self.timers[timerName].time ~= 0
 end
 
 function Client:hasKeypressTimedOut()
@@ -218,7 +227,7 @@ function Client:resetLastKey()
     self.last_key = {
         key = nil,
         time = nil,
-        timeout = 0.25
+        timeout = 1
     }
 end
 
@@ -230,6 +239,15 @@ end
 function Client:keypressTimeOutHandler()
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
         self:resetLastKey()
+    end
+end
+
+function Client:timerTimeOutHandler()
+    for timerName, timerData in pairs(self.timers) do
+        if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
+            timerData.time = 0
+            if timerData.callback then timerData.callback() end
+        end
     end
 end
 
@@ -311,15 +329,23 @@ local function keypressListeners()
     end
 end
 
--- TODO: not sure about my naming convention here...
--- probably should be more like: clickListenerAdjustUI
-local function adjustUiMouseClickListener(args)
+local function clickListenerAdjustUI(args)
     if ui.mouseClicked(ui.MouseButton.Left) and args.toggled then
         ac.debug("[CLICK] - adjustUI", args.clickCounter)
         args.clickCounter = args.clickCounter + 1
 
         CLIENT.ui_pos = ui.mousePos()
     end
+end
+
+local function speedTracker()
+    if not CLIENT.current_run.active then return end
+
+    local player = ac.getCarState(1)
+    if player.speedKmh < CONFIG.requiredSpeed and not CLIENT:isTimerActive('slow') then
+
+    end
+
 end
 
 --======================================================================================================================--
@@ -364,7 +390,7 @@ KEYPRESS_EVENTS = {
         name    = 'adjustUI',
         key     = CONFIG.controls.adjustUI.key,
         keyName = CONFIG.controls.adjustUI.keyName,
-        IIFE    = adjustUiMouseClickListener
+        IIFE    = clickListenerAdjustUI
     },
     resetVehicle    = {
         event   = keypressEventResetVehicle,
@@ -416,11 +442,10 @@ function script.update(deltaTime)
     showHelpMenu()
     keypressListeners()
 
+    -- we need to have a function to update the timers with deltaTime
+    -- it might be a good idea to also include a Timer class??
+
     CLIENT:keypressTimeOutHandler()
-
-    -- local player = ac.getCarState(1)
-    -- local sim = ac.getSim()
-
     CLIENT.time_elapsed = CLIENT.time_elapsed + deltaTime
 end
 
