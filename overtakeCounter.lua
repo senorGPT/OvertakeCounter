@@ -324,8 +324,8 @@ local Client = {}
 function Client:new()
     local instance = {
         runs = {},
-        best_run = nil, --! possibly useless variable
-        current_run = nil,
+        best_run = nil,
+        current_run = Run:new(),
         time_elapsed = 0,
         ui_pos = vec2(0, 0),
         last_key = {
@@ -452,7 +452,6 @@ local CLIENT = Client:new()
 
 
 
---! we might need to move helper functions above the classes
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --                                                HELPER FUNCS                                                          --
