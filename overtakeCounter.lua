@@ -238,7 +238,7 @@ function Client:new()
     self.__index = self
     return setmetatable(instance, self)
 end
--- TODO remove this code
+-- TODO remove this code ... why?
 function Client:isTimerActive(timerName)
     return self.timers[timerName].time ~= 0
 end
@@ -255,6 +255,13 @@ function Client:hasKeypressTimedOut()
     ac.debug('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
     return returnBoolean
 end
+
+-- a b c d e f g h i j k l m n o p q r s t u v w x y z
+
+-- A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+-- 0 1 2 3 4 5 6 7 9
+
 
 function Client:canPressButton(targetButton)
     local returnBoolean = false
@@ -383,7 +390,8 @@ local function keypressListeners()
         if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
             -- initiate callback with specified callback args
             keypressData.event(keypressData.args)
-            CLIENT:setKey(keypressData.keyName, CLIENT.time_elapsed)
+            --! probably need to make a variable for each keypress on how long to wait before user can press again
+            CLIENT:setKey(keypressData.keyName, CLIENT.time_elapsed + 1.0)
             -- call immediatly invoked function expression if set
             if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
         end
