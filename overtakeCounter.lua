@@ -260,29 +260,36 @@ function Run:isOver()
     return self.over
 end
 
+function Run:setOver()
+    self.over = true
+    self.active = false
+end
+
 function Run:crashHandler()
     self.over = self.active and self.player.collidedWith == 0
     --TODO addMessage(MackMessages[math.random(1, #MackMessages)], -1)   ... wrap in an if?
 end
 
 function Run:speedHandler(timeElapsed)
+    -- check if player is going less than the required speed
     if self.active and self.player.speedKmh < CONFIG.requiredSpeed then
-        if self.player.speedKmh > self.fastestSpeed then
-            self.fastestSpeed = self.player.speedKmh
-        end
-
-        if !self.slowTimer:isActive() then
+        if not self.slowTimer:isActive() then
             --TODO we need to make a configurable variable for amount of time
             self.slowTimer:start(timeElapsed, 5)
         end
 
         if self.slowTimer:isTimedOut() then
-            self.over = true
-            self.active = false
+            Run:setOver()
             return
         end
     end
 
+    -- keep track of players fastest speed
+    if self.active and self.player.speedKmh > self.fastestSpeed then
+        self.fastestSpeed = self.player.speedKmh
+    end
+
+    -- start the run if player goes above required speed for first time
     if not self.active and self.player.speedKmh >= CONFIG.requiredSpeed then
         self.active = true
     end
@@ -294,6 +301,10 @@ function Run:handler(timeElapsed)
 
     -- check if player is going faster than threshold speed
     self:speedHandler(timeElapsed)
+
+    -- TODO handle overtakes
+
+    -- TODO handle combo & score
 
     self.slowTimer:tick(timeElapsed)
 end
@@ -313,7 +324,7 @@ local Client = {}
 function Client:new()
     local instance = {
         runs = {},
-        best_run = nil,
+        best_run = nil, --! possibly useless variable
         current_run = nil,
         time_elapsed = 0,
         ui_pos = vec2(0, 0),
@@ -389,13 +400,33 @@ function Client:keypressTimeOutHandler()
     end
 end
 
+function Client:isCurrentRunBestRun()
+    if #self.runs == 0 then return true end
+
+    local flag_isBestRun = true
+    for i = 1, #self.runs do
+        if self.runs[i].score > self.current_run.score then
+            flag_isBestRun = false
+        end
+    end
+
+    return flag_isBestRun
+end
+
 function Client:handler()
     self.current_run:handler()
 
     if self.current_run:isOver() then
-        --TODO
-        -- 1. move current_run into runs
-        -- 2. check if current_run is a `best run`
+        table.insert(self.runs, self.current_run)
+
+        -- check if current_run is a `best run`
+        if self:isCurrentRunBestRun() then
+            self.best_run = #self.runs
+        end
+
+        --TODO addMessage()?
+
+        self.current_run = Run:new()
     end
 
     self:keypressTimeOutHandler()
@@ -421,6 +452,7 @@ local CLIENT = Client:new()
 
 
 
+--! we might need to move helper functions above the classes
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --                                                HELPER FUNCS                                                          --
