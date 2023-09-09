@@ -57,6 +57,7 @@ CONFIG.sounds = {
     personalBest        = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3'
 }
 
+--TODO implement functionality for this
 CONFIG.levels = {
     {
         amount  = 0,
@@ -135,42 +136,6 @@ CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
---                                                    RUN CLASS                                                         --
---======================================================================================================================--
---------------------------------------------------------------------------------------------------------------------------
-local Run = {}
-function Run:new()
-    local stats = {
-        score = 0,
-        combo = 1,
-        time = 0,
-        overtakes = 0,
-        fastestSpeed = 0,
-        active = false
-    }
-    self.__index = self
-    return setmetatable(stats, self)
-end
-
-function Run:reset()
-    self.stats = {
-        score = 0,
-        combo = 1,
-        time = 0,
-        overtakes = 0,
-        fastestSpeed = 0,
-        active = false
-    }
-end
-
---------------------------------------------------------------------------------------------------------------------------
---======================================================================================================================--
---------------------------------------------------------------------------------------------------------------------------
-
-
-
---------------------------------------------------------------------------------------------------------------------------
---======================================================================================================================--
 --                                                    TIMER CLASS                                                       --
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
@@ -180,10 +145,31 @@ function Timer:new()
         active = false,
         time = 0,
         timeOut = 0,
-        callback = nil
+        callback = nil,
+        timedOut = false
     }
     self.__index = self
     return setmetatable(instance, self)
+end
+
+function Timer:new_(active, time, timeOut, callback)
+    local instance = {
+        active = active,
+        time = time,
+        timeOut = timeOut,
+        callback = callback,
+        timedOut = false
+    }
+    self.__index = self
+    return setmetatable(instance, self)
+end
+
+function Timer:init(active, time, timeOut, callback)
+    self.active = active
+    self.time = time
+    self.timeOut = timeOut
+    self.callback = callback
+    self.timedOut = false
 end
 
 function Timer:start(currentTime, timeOutSeconds, callback)
@@ -195,22 +181,128 @@ function Timer:start(currentTime, timeOutSeconds, callback)
     end
 end
 
+function Timer:restart(currentTime, timeOutSeconds)
+    if ~self.active then return end
+    self.time = currentTime
+    self.timeOut = currentTime + timeOutSeconds
+end
+
 function Timer:isActive()
     return self.active
 end
 
+function Timer:isTimedOut()
+    return self.timedOut
+end
+
 function Timer:reset(hardReset)
-    self.instance = {
-        active = false,
-        time = 0,
-        timeOut = 0
-    }
-    if hardReset then self.instance.callback = nil end
+    self.active = false
+    self.time = 0
+    self.timeOut = 0
+    self.timedOut = false
+
+    if hardReset then self.callback = nil end
+end
+
+function Timer:tick(currentTime)
+    if ~self.active then return end
+
+    if (self.time + self.timeOut) >= currentTime then
+        self.timedOut = true
+        self.active = false
+        return
+    end
 end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--                                                    RUN CLASS                                                         --
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+local Run = {}
+function Run:new()
+    local stats = {
+        score           = 0,
+        combo           = 1,
+        timeStarted     = 0,
+        timeElapsed     = 0, --! might be a useless variable
+        overtakes       = 0,
+        fastestSpeed    = 0,
+        active          = false,
+        over            = false,
+        player          = ac.getCarState(1),
+        slowTimer       = Timer:new()
+    }
+    self.__index = self
+    return setmetatable(stats, self)
+end
+
+function Run:reset()
+    self.score          = 0
+    self.combo          = 1
+    self.timeStarted    = 0
+    self.timeElapsed    = 0 --! might be a useless variable
+    self.overtakes      = 0
+    self.fastestSpeed   = 0
+    self.active         = false
+    self.over           = false
+    self.player         = ac.getCarState(1)
+    self.slowTimer:reset()
+end
+
+function Run:isOver()
+    return self.over
+end
+
+function Run:crashHandler()
+    --! maybe we can do ~player.collidedWith
+    self.over = self.active and self.player.collidedWith == 0
+    --TODO addMessage(MackMessages[math.random(1, #MackMessages)], -1)   ... wrap in an if?
+end
+
+function Run:speedHandler(timeElapsed)
+    if self.active and self.player.speedKmh < CONFIG.requiredSpeed then
+        if self.player.speedKmh > self.fastestSpeed then
+            self.fastestSpeed = self.player.speedKmh
+        end
+
+        if !self.slowTimer:isActive() then
+            --TODO we need to make a configurable variable for amount of time
+            self.slowTimer:start(timeElapsed, 5)
+        end
+
+        if self.slowTimer:isTimedOut() then
+            self.over = true
+            self.active = false
+            return
+        end
+    end
+
+    if ~self.active and self.player.speedKmh >= CONFIG.requiredSpeed then
+        self.active = true
+    end
+end
+
+function Run:handler(timeElapsed)
+    -- check if the player has collided
+    self:crashHandler()
+
+    -- check if player is going faster than threshold speed
+    self:speedHandler(timeElapsed)
+
+    self.slowTimer:tick(timeElapsed)
+end
+
+--------------------------------------------------------------------------------------------------------------------------
+--======================================================================================================================--
+--------------------------------------------------------------------------------------------------------------------------
+
 
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -232,15 +324,11 @@ function Client:new()
             timeout = 1
         },
         timers = {
-            slow = { time = 0, timeout = 5, callback = nil }
+            slow = Timer:new()
         }
     }
     self.__index = self
     return setmetatable(instance, self)
-end
--- TODO remove this code ... why?
-function Client:isTimerActive(timerName)
-    return self.timers[timerName].time ~= 0
 end
 
 function Client:hasKeypressTimedOut()
@@ -255,13 +343,6 @@ function Client:hasKeypressTimedOut()
     ac.debug('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
     return returnBoolean
 end
-
--- a b c d e f g h i j k l m n o p q r s t u v w x y z
-
--- A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-
--- 0 1 2 3 4 5 6 7 9
-
 
 function Client:canPressButton(targetButton)
     local returnBoolean = false
@@ -283,6 +364,7 @@ function Client:canPressButton(targetButton)
         ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
     end
     ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
+    --TODO addMessage()?
     return returnBoolean
 end
 
@@ -308,15 +390,17 @@ function Client:keypressTimeOutHandler()
     end
 end
 
---TODO rewrite in Timer class
--- function Client:timerTimeOutHandler()
---     for timerName, timerData in pairs(self.timers) do
---         if self.isTimerActive(timerName) and timerData.time >= timerData.timeout then
---             timerData.time = 0
---             if timerData.callback then timerData.callback() end
---         end
---     end
--- end
+function Client:handler()
+    self.current_run:handler()
+
+    if self.current_run:isOver() then
+        --TODO
+        -- 1. move current_run into runs
+        -- 2. check if current_run is a `best run`
+    end
+
+    self:keypressTimeOutHandler()
+end
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -391,6 +475,7 @@ local function keypressListeners()
             -- initiate callback with specified callback args
             keypressData.event(keypressData.args)
             --! probably need to make a variable for each keypress on how long to wait before user can press again
+            --! self.last_key.timeOut?
             CLIENT:setKey(keypressData.keyName, CLIENT.time_elapsed + 1.0)
             -- call immediatly invoked function expression if set
             if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
@@ -405,16 +490,6 @@ local function clickListenerAdjustUI(args)
 
         CLIENT.ui_pos = ui.mousePos()
     end
-end
-
-local function speedTracker()
-    if not CLIENT.current_run.active then return end
-
-    local player = ac.getCarState(1)
-    if player.speedKmh < CONFIG.requiredSpeed and not CLIENT:isTimerActive('slow') then
-
-    end
-
 end
 
 --======================================================================================================================--
@@ -511,10 +586,7 @@ function script.update(deltaTime)
     showHelpMenu()
     keypressListeners()
 
-    -- we need to have a function to update the timers with deltaTime
-    -- it might be a good idea to also include a Timer class??
-
-    CLIENT:keypressTimeOutHandler()
+    CLIENT:handler()
     CLIENT.time_elapsed = CLIENT.time_elapsed + deltaTime
 end
 
