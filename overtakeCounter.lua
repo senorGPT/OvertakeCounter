@@ -3,7 +3,7 @@
 --
 -- Version: 1.0
 -- Written By: Dexter
--- Discord: BigDaddyDex#0001
+-- Discord: SenorGPT#0001
 -- Server: discord.gg/UwH68aHMPn
 --
 ----------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ function Timer:start(currentTime, timeOutSeconds, callback)
 end
 
 function Timer:restart(currentTime, timeOutSeconds)
-    if ~self.active then return end
+    if not self.active then return end
     self.time = currentTime
     self.timeOut = currentTime + timeOutSeconds
 end
@@ -205,7 +205,7 @@ function Timer:reset(hardReset)
 end
 
 function Timer:tick(currentTime)
-    if ~self.active then return end
+    if not self.active then return end
 
     if (self.time + self.timeOut) >= currentTime then
         self.timedOut = true
@@ -261,7 +261,6 @@ function Run:isOver()
 end
 
 function Run:crashHandler()
-    --! maybe we can do ~player.collidedWith
     self.over = self.active and self.player.collidedWith == 0
     --TODO addMessage(MackMessages[math.random(1, #MackMessages)], -1)   ... wrap in an if?
 end
@@ -284,7 +283,7 @@ function Run:speedHandler(timeElapsed)
         end
     end
 
-    if ~self.active and self.player.speedKmh >= CONFIG.requiredSpeed then
+    if not self.active and self.player.speedKmh >= CONFIG.requiredSpeed then
         self.active = true
     end
 end
@@ -454,6 +453,7 @@ local function showHelpMenu()
     -- only show help menu for the start of the script
     if CLIENT.time_elapsed == 0 then
         ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
+        --TODO this
         addMessage(ac.getCarName(0));
         addMessage('Dexter is here boi' .. CLIENT.time_elapsed);
     end
@@ -506,6 +506,8 @@ end
 
 local function keypressEventResetVehicle(args)
     local player = ac.getCarState(1)
+
+    --TODO check if player is stopped or barely moving before allowing to reset
 
     ac.debug("[KEYPRESS] - resetVehicle", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
