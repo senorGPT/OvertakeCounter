@@ -342,7 +342,7 @@ end
 
 function Client:hasKeypressTimedOut()
     local returnBoolean = false
-    if self.last_key.key == nil then
+    if self.last_key.key == nil then --! .key or .time?
         ac.debug('[HAS_KEYPRESS_TIMEDOUT]', true)
         return true
     end
@@ -379,10 +379,8 @@ function Client:canPressButton(targetButton)
 end
 
 function Client:resetLastKey()
-    self.last_key = {
-        key = nil,
-        time = nil
-    }
+    self.last_key.key = nil
+    self.last_key.time = nil
 end
 
 function Client:setKey(key, time)
