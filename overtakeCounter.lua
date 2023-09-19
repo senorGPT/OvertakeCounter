@@ -373,6 +373,7 @@ function Client:canPressButton(targetButton)
         returnBoolean = true
         ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
     end
+    ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'return returnBoolean')
     ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
     --TODO addMessage()?
     return returnBoolean
@@ -489,7 +490,7 @@ local function showHelpMenu()
         addMessage('Dexter is here boi' .. CLIENT.time_elapsed);
     end
 end
-                                                                                                                      --
+
 --======================================================================================================================--
 --                                                LOGIC FUNCS                                                           --
 --======================================================================================================================--
