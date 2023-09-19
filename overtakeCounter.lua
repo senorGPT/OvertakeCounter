@@ -380,7 +380,6 @@ function Client:canPressButton(targetButton)
         returnBoolean = true
         debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
     end
-    debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'return returnBoolean')
     debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
     --TODO addMessage()?
     return returnBoolean
@@ -420,7 +419,7 @@ end
 
 function Client:handler()
     self.current_run:handler()
-
+    debugMsg('[CLIENT:HANDLER]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
     if self.current_run:isOver() then
         table.insert(self.runs, self.current_run)
 
