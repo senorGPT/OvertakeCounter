@@ -345,8 +345,7 @@ function Client:hasKeypressTimedOut()
     local returnBoolean = false
     if self.last_key.key == nil then
         ac.debug('[HAS_KEYPRESS_TIMEDOUT]', true)
-        -- return true
-        returnBoolean = true
+        return true
     end
     if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
         returnBoolean = true
@@ -505,11 +504,13 @@ local function keypressListeners()
         local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
         if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
-            -- initiate callback with specified callback args
-            keypressData.event(keypressData.args)
             --! probably need to make a variable for each keypress on how long to wait before user can press again
             --! self.last_key.timeOut?
             CLIENT:setKey(keypressData.keyName, (CLIENT.time_elapsed + 1.0))
+
+            -- initiate callback with specified callback args
+            keypressData.event(keypressData.args)
+
             -- call immediatly invoked function expression if set
             if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
         end
