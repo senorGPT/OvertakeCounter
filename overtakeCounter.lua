@@ -321,6 +321,8 @@ end
 --------------------------------------------------------------------------------------------------------------------------
 
 
+local KEYPRESS_EVENTS = {}
+
 
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
@@ -417,9 +419,35 @@ function Client:isCurrentRunBestRun()
     return flag_isBestRun
 end
 
+function Client:keypressListeners()
+    for _, keypressData in pairs(KEYPRESS_EVENTS) do
+        -- TODO i dont think this needs to be a variable
+        local isKeyPressedDown = ac.isKeyDown(keypressData.key)
+
+
+        -- TODO: we need to move this function above CLIENT class possibly and then rewrite it
+        -- TODO: so that it gets called from within the CLIENT:handler() class instead .. I believe this will fix our stupid bug
+        -- TODO: also, look deeper in to the if statement below, it looks funky now that i've looked at it for a bit
+
+        if isKeyPressedDown and self:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
+            --! probably need to make a variable for each keypress on how long to wait before user can press again
+            --! self.last_key.timeOut?
+            self:setKey(keypressData.keyName, (self.time_elapsed + 1.0))
+
+            -- initiate callback with specified callback args
+            keypressData.event(keypressData.args)
+
+            -- call immediatly invoked function expression if set
+            if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
+        end
+    end
+end
+
 function Client:handler()
     self.current_run:handler()
-    self:setKey('b', self.time_elapsed + 1.0)
+    self:keypressListeners()
+
+    -- self:setKey('b', self.time_elapsed + 1.0)
     debugMsg('[CLIENT:HANDLER]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
     if self.current_run:isOver() then
         table.insert(self.runs, self.current_run)
@@ -448,7 +476,7 @@ end
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
 
-local KEYPRESS_EVENTS = {}
+
 local CLIENT = Client:new()
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -500,25 +528,6 @@ end
 --======================================================================================================================--
 local function booleanToString(target)
     return target and "Enabled" or "Disabled"
-end
-
-local function keypressListeners()
-    for _, keypressData in pairs(KEYPRESS_EVENTS) do
-        -- TODO i dont think this needs to be a variable
-        local isKeyPressedDown = ac.isKeyDown(keypressData.key)
-
-        if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
-            --! probably need to make a variable for each keypress on how long to wait before user can press again
-            --! self.last_key.timeOut?
-            CLIENT:setKey(keypressData.keyName, (CLIENT.time_elapsed + 1.0))
-
-            -- initiate callback with specified callback args
-            keypressData.event(keypressData.args)
-
-            -- call immediatly invoked function expression if set
-            if keypressData.IIFE ~= nil then keypressData.IIFE(keypressData.args) end
-        end
-    end
 end
 
 local function clickListenerAdjustUI(args)
@@ -624,7 +633,7 @@ function script.update(deltaTime)
     debugMsg('[TIME_ELAPSED]', CLIENT.time_elapsed)
 
     showHelpMenu()
-    keypressListeners()
+    --keypressListeners()
 
     CLIENT:handler()
     CLIENT.time_elapsed = CLIENT.time_elapsed + deltaTime
