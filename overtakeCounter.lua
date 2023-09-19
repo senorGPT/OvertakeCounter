@@ -350,13 +350,14 @@ end
 function Client:hasKeypressTimedOut()
     local returnBoolean = false
     if self.last_key.key == nil then --! .key or .time?
-        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', true)
+        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true | ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
         return true
     end
     if self.last_key.time >= self.time_elapsed then
+        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true >=')
         returnBoolean = true
     end
-    debugMsg('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
+    debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'false')
     return returnBoolean
 end
 
@@ -367,7 +368,7 @@ function Client:canPressButton(targetButton)
         returnBoolean = true
         debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
         debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
-        -- return true
+        return true
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
