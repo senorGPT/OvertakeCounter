@@ -364,6 +364,7 @@ function Client:hasKeypressTimedOut()
 end
 
 function Client:canPressButton(targetButton)
+    --! I think this is where the bug is >:(
     local returnBoolean = false
     -- no key has been pressed
     if self.last_key.key == nil then
@@ -402,6 +403,7 @@ function Client:keypressTimeOutHandler()
     debugMsg('[KEYPRESS_TIMER]', tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
         debugMsg('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
+        debugMsg('[keypressTimeOutHandler()2]', tostring(self:hasKeypressTimedOut()) .. ' : ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
         self:resetLastKey()
     end
 end
