@@ -419,6 +419,7 @@ end
 
 function Client:handler()
     self.current_run:handler()
+    self:setKey('b', self.time_elapsed + 1.0)
     debugMsg('[CLIENT:HANDLER]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
     if self.current_run:isOver() then
         table.insert(self.runs, self.current_run)
