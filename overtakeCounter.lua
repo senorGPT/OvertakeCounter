@@ -330,8 +330,7 @@ function Client:new()
         ui_pos = vec2(0, 0),
         last_key = {
             key = nil,
-            time = nil,
-            timeout = 1
+            time = nil
         },
         timers = {
             slow = Timer:new()
@@ -347,7 +346,7 @@ function Client:hasKeypressTimedOut()
         ac.debug('[HAS_KEYPRESS_TIMEDOUT]', true)
         return true
     end
-    if self.last_key.time + self.last_key.timeout >= self.time_elapsed then
+    if self.last_key.time >= self.time_elapsed then
         returnBoolean = true
     end
     ac.debug('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
@@ -382,8 +381,7 @@ end
 function Client:resetLastKey()
     self.last_key = {
         key = nil,
-        time = nil,
-        timeout = 1
+        time = nil
     }
 end
 
