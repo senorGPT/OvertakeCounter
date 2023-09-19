@@ -121,6 +121,7 @@ CONFIG.requiredSpeed                = 95    -- required speed for the counter to
 CONFIG.overtakeDistance             = 9     -- overtake distance between the player and other vehicles for it to count as sucessful overtake
 CONFIG.closeOvertakeDistance        = 4     -- close overtake distance
 CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
+CONFIG.debugMode                    = true  -- whether or not to print debug logs
 
 ----------------------------------------------------------------------------------------------------------------------------
 --========================================================================================================================--
@@ -132,6 +133,12 @@ CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
 --                  dont edit anything below this unless you understand what you are doing                                --
 --//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//--//
 
+
+local function debugMsg(key, value)
+    if CONFIG.debugMode then
+        ac.debug(key, value)
+    end
+end
 
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -343,13 +350,13 @@ end
 function Client:hasKeypressTimedOut()
     local returnBoolean = false
     if self.last_key.key == nil then --! .key or .time?
-        ac.debug('[HAS_KEYPRESS_TIMEDOUT]', true)
+        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', true)
         return true
     end
     if self.last_key.time >= self.time_elapsed then
         returnBoolean = true
     end
-    ac.debug('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
+    debugMsg('[HAS_KEYPRESS_TIMEDOUT]', returnBoolean)
     return returnBoolean
 end
 
@@ -358,22 +365,22 @@ function Client:canPressButton(targetButton)
     -- no key has been pressed
     if self.last_key.key == nil then
         returnBoolean = true
-        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
-        ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
+        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
+        debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
         -- return true
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
         returnBoolean = true
-        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key ~= targetButton')
+        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key ~= targetButton')
     end
     -- the timeout for the keypress has elapsed
     if self:hasKeypressTimedOut() then
         returnBoolean = true
-        ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
+        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
     end
-    ac.debug('[CAN_PRESS_BUTTON_RETURN]', 'return returnBoolean')
-    ac.debug('[CAN_PRESS_BUTTON]', returnBoolean)
+    debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'return returnBoolean')
+    debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
     --TODO addMessage()?
     return returnBoolean
 end
@@ -386,13 +393,13 @@ end
 function Client:setKey(key, time)
     self.last_key.key = key
     self.last_key.time = time
-    ac.debug('[SET_KEY]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
+    debugMsg('[SET_KEY]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
 end
 
 function Client:keypressTimeOutHandler()
-    ac.debug('[KEYPRESS_TIMER]', tostring(self.last_key.time))
+    debugMsg('[KEYPRESS_TIMER]', tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
-        ac.debug('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
+        debugMsg('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
         self:resetLastKey()
     end
 end
@@ -461,7 +468,7 @@ local CLIENT = Client:new()
 -- TODO: rewrite this whonya
 local messages = {}
 local function addMessage(text)
-    ac.debug("[LAST_MSG]", text)
+    debugMsg("[LAST_MSG]", text)
     for i = math.min(#messages + 1, 4), 2, -1 do
         messages[i] = messages[i - 1]
         messages[i].targetPos = i
@@ -480,7 +487,7 @@ end
 local function showHelpMenu()
     -- only show help menu for the start of the script
     if CLIENT.time_elapsed == 0 then
-        ac.debug("[STATUS]", "running... " .. ac.getCarName(0))
+        debugMsg("[STATUS]", "running... " .. ac.getCarName(0))
         --TODO this
         addMessage(ac.getCarName(0));
         addMessage('Dexter is here boi' .. CLIENT.time_elapsed);
@@ -515,7 +522,7 @@ end
 
 local function clickListenerAdjustUI(args)
     if ui.mouseClicked(ui.MouseButton.Left) and args.toggled then
-        ac.debug("[CLICK] - adjustUI", args.clickCounter)
+        debugMsg("[CLICK] - adjustUI", args.clickCounter)
         args.clickCounter = args.clickCounter + 1
 
         CLIENT.ui_pos = ui.mousePos()
@@ -527,7 +534,7 @@ end
 --======================================================================================================================--
 local function keypressEventAdjustUI(args)
     -- check if the playeer toggled moving the UI around
-    ac.debug("[KEYPRESS] - adjustUI", args.keypressCounter)
+    debugMsg("[KEYPRESS] - adjustUI", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
 
     args.toggled = not args.toggled
@@ -539,7 +546,7 @@ local function keypressEventResetVehicle(args)
 
     --TODO check if player is stopped or barely moving before allowing to reset
 
-    ac.debug("[KEYPRESS] - resetVehicle", args.keypressCounter)
+    debugMsg("[KEYPRESS] - resetVehicle", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
 
     physics.setCarPosition(0, player.position, ac.getCameraForward())
@@ -547,7 +554,7 @@ local function keypressEventResetVehicle(args)
 end
 
 local function keypressEventToggleSounds(args)
-    ac.debug("[KEYPRESS] - toggleSounds", args.keypressCounter)
+    debugMsg("[KEYPRESS] - toggleSounds", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
 
     args.toggled = not args.toggled
@@ -613,7 +620,7 @@ end
 function script.update(deltaTime)
     -- deltaTime is the time elapsed since the last frame in seconds
     -- Update plugin logic here
-    ac.debug('[TIME_ELAPSED]', CLIENT.time_elapsed)
+    debugMsg('[TIME_ELAPSED]', CLIENT.time_elapsed)
 
     showHelpMenu()
     keypressListeners()
