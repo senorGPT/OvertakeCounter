@@ -269,8 +269,15 @@ function Run:new()
         active          = false,
         over            = false,
         player          = ac.getCarState(1),
+        carStates       = {},
         slowTimer       = Timer:new()
     }
+
+    local sim = ac.getSim()
+    while sim.carsCount > #stats.carStates do
+        stats.carStates[#stats.carStates + 1] = {}
+    end
+
     self.__index = self
     return setmetatable(stats, self)
 end
@@ -284,7 +291,13 @@ function Run:reset()
     self.active         = false
     self.over           = false
     self.player         = ac.getCarState(1)
+    self.carStates      = {}
     self.slowTimer:reset()
+
+    local sim = ac.getSim()
+    while sim.carsCount > #self.carStates do
+        self.carStates[#self.carStates + 1] = {}
+    end
 end
 
 function Run:isOver()
@@ -326,6 +339,7 @@ function Run:speedHandler(timeElapsed)
 end
 
 function Run:overtakeHandler()
+    --TODO move into config
     local closeOvertakeDistance = 4
     local overtakeDistance = 9
 
@@ -334,32 +348,33 @@ function Run:overtakeHandler()
         local car = ac.getCarState(i)
         local player = ac.getCarState(1)
 
-        debugMsg('[GET_SIM_CARS_COUNT]', tostring(ac.getSim().carsCount))
 
         -- if player passed a vehicle within a normal range
         if car.position:closerToThan(player.position, overtakeDistance) then
-            local drivingAlong = math.dot(car.look, player.look) > 0.2
-            debugMsg('[DRIVING_ALONG]', tostring(drivingAlong))
-            if not drivingAlong then
-                -- if player has passed a vehicle super close
-                if --[[not state.nearMiss and]] car.position:closerToThan(player.position, closeOvertakeDistance) then
-                    -- state.nearMiss = true
-                    debugMsg('[CLOSE_OVERTAKE_DISTANCE]', 'nearmiss')
-                end
-            end
+            --! im not sure this code is needed...
+            -- local drivingAlong = math.dot(car.look, player.look) > 0.2
+            -- debugMsg('[DRIVING_ALONG]', tostring(drivingAlong))
+            -- if not drivingAlong then
+            --     -- if player has passed a vehicle super close
+            --     if --[[not state.nearMiss and]] car.position:closerToThan(player.position, closeOvertakeDistance) then
+            --         -- state.nearMiss = true
+            --         debugMsg('[CLOSE_OVERTAKE_DISTANCE]', 'nearmiss')
+            --     end
+            -- end
 
-            -- if not state.overtaken and not state.collided and state.drivingAlong then
+            if not self.carStates[i].overtaken then
                 local posDir = (car.position - player.position):normalize()
                 local posDot = math.dot(posDir, car.look)
                 debugMsg('[POS_DOT]', tostring(posDot))
                 -- state.maxPosDot = math.max(state.maxPosDot, posDot)
-                -- if posDot < -0.5 and state.maxPosDot > 0.5 then
+                if posDot < -0.5 --[[and state.maxPosDot > 0.5]] then
                     -- totalScore = totalScore + math.ceil(10 * comboMeter)
                     -- comboMeter = comboMeter + 1
                     -- comboColor = comboColor + 90
 
                     -- playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
                     addMessage('Overtake 1x', 1)
+                    self.carStates[i].overtaken = true
                     -- state.overtaken = true -- dont allow multiple overtakes of same vehicle
 
                     -- if car.position:closerToThan(player.position, closeOvertakeDistance) then
@@ -371,10 +386,11 @@ function Run:overtakeHandler()
                     --     addMessage(CloseMessages[math.random(#CloseMessages)], 2)
                     -- end
 
-                -- end
-            -- end
+                end
+            end
 
         else
+            self.carStates[i].overtaken = false
             -- state.maxPosDot = -1
             -- state.overtaken = false
             -- state.collided = false
