@@ -356,7 +356,7 @@ function Client:hasKeypressTimedOut()
         return true
     end
     if self.last_key.time >= self.time_elapsed then
-        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true >=')
+        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true : ' .. tostring(self.last_key.time) .. ' >= ' .. tostring(self.time_elapsed))
         return true
     end
     debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'false')
