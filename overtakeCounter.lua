@@ -14,6 +14,7 @@
 --========================================================================================================================--
 CONFIG = {}
 
+--TODO implement functionality for this
 CONFIG.messages = {
     -- messages that appear when the player has crashed
     crashed = {
@@ -50,6 +51,7 @@ CONFIG.messages = {
     }
 }
 
+--TODO implement functionality for this
 CONFIG.sounds = {
     overtake            = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
     closeOvertake       = 'http' .. 's://cdn.discordapp.com/attachments/140183723348852736/1000988999877394512/pog_noti_sound.mp3',
@@ -97,6 +99,26 @@ CONFIG.levels = {
     },
 }
 
+--TODO implement functionality for this
+-- configure an arbitrary amount of overtake configurations, only restriction is ensure descending order of distance
+CONFIG.overtakes = {
+    {
+        name        = 'overtake',   -- name for the overtake
+        distance    = 9,            -- distance for the overtake from the other vehicle
+        multiplier  = 1             -- combometer multiplier
+    },
+    {
+        name        = 'close',
+        distance    = 5,
+        multiplier  = 1.5
+    },
+    {
+        name        = 'superclose',
+        distance    = 2,
+        multiplier  = 3
+    }
+}
+
 -- DO NOT MODIFY KEYS, IE, 'adjustUI', 'resetVehicle'
 -- ONLY MODIFY THE VALUES, IE, ac.KeyIndex.B, 'B', 'UI Move mode '
 CONFIG.controls = {
@@ -120,10 +142,13 @@ CONFIG.controls = {
     }
 }
 
+--TODO: possibly create a better structure for overtake attribute configuration
 CONFIG.requiredSpeed                = 95    -- required speed for the counter to start at
 CONFIG.overtakeDistance             = 9     -- overtake distance between the player and other vehicles for it to count as sucessful overtake
 CONFIG.closeOvertakeDistance        = 4     -- close overtake distance
 CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
+CONFIG.overtakeScore                = 10    -- base score for an overtake
+CONFIG.overtakeComboScore           = 1     -- base combo score addition for each overtake
 CONFIG.slowTime                     = 5     -- amount of seconds of going underneath the speed limit before run resets
 CONFIG.debugMode                    = true  -- whether or not to print debug logs
 
@@ -239,7 +264,7 @@ function Timer:reset(hardReset)
 end
 
 function Timer:tick(currentTime)
-    if not self.active then return end
+    if not self.active or currentTime == nil or self.time == nil then return end
 
     if currentTime >= self.time then
         self.timedOut = true
@@ -356,52 +381,39 @@ function Run:overtakeHandler()
 
         -- if player passed a vehicle within a normal range
         if car.position:closerToThan(player.position, overtakeDistance) then
-            --! im not sure this code is needed...
-            -- local drivingAlong = math.dot(car.look, player.look) > 0.2
-            -- debugMsg('[DRIVING_ALONG]', tostring(drivingAlong))
-            -- if not drivingAlong then
-            --     -- if player has passed a vehicle super close
-            --     if --[[not state.nearMiss and]] car.position:closerToThan(player.position, closeOvertakeDistance) then
-            --         -- state.nearMiss = true
-            --         debugMsg('[CLOSE_OVERTAKE_DISTANCE]', 'nearmiss')
-            --     end
-            -- end
-
-            if not self.carStates[i].overtaken then
-                local posDir = (car.position - player.position):normalize()
-                local posDot = math.dot(posDir, car.look)
-                debugMsg('[POS_DOT]', tostring(posDot))
-                -- state.maxPosDot = math.max(state.maxPosDot, posDot)
-                if posDot < -0.5 --[[and state.maxPosDot > 0.5]] then
-                    -- totalScore = totalScore + math.ceil(10 * comboMeter)
-                    -- comboMeter = comboMeter + 1
-                    -- comboColor = comboColor + 90
-
-                    -- playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
-                    addMessage('Overtake 1x', 1)
-                    self.carStates[i].overtaken = true
-                    -- state.overtaken = true -- dont allow multiple overtakes of same vehicle
-
-                    -- if car.position:closerToThan(player.position, closeOvertakeDistance) then
-                    --     comboMeter = comboMeter + 3
-                    --     comboColor = comboColor + math.random(1, 90)
-                    --     comboColor = comboColor + 90
-
-                    --     playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
-                    --     addMessage(CloseMessages[math.random(#CloseMessages)], 2)
-                    -- end
-
-                end
+            if self.carStates[i].overtaken then
+                goto continue
             end
 
+            local posDir = (car.position - player.position):normalize()
+            local posDot = math.dot(posDir, car.look)
+            debugMsg('[POS_DOT]', tostring(posDot))
+
+            if posDot < -0.5 then
+                -- totalScore = totalScore + math.ceil(CONFIG.overtakeScore * comboMeter)
+                -- comboMeter = comboMeter + 1
+                -- comboColor = comboColor + 90
+
+                -- playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
+                addMessage('Overtake 1x')
+                -- dont allow multiple overtakes of same vehicle
+                self.carStates[i].overtaken = true
+
+                -- if car.position:closerToThan(player.position, closeOvertakeDistance) then
+                --     comboMeter = comboMeter + 3
+                --     comboColor = comboColor + math.random(1, 90)
+                --     comboColor = comboColor + 90
+
+                --     playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
+                --     addMessage(CloseMessages[math.random(#CloseMessages)], 2)
+                -- end
+
+            end
         else
             self.carStates[i].overtaken = false
-            -- state.maxPosDot = -1
-            -- state.overtaken = false
-            -- state.collided = false
-            -- state.drivingAlong = true
-            -- state.nearMiss = false
         end
+
+        ::continue::
     end
 end
 
