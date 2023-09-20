@@ -303,6 +303,62 @@ function Run:speedHandler(timeElapsed)
     end
 end
 
+function Run:overtakeHandler()
+    local closeOvertakeDistance = 4
+    local overtakeDistance = 9
+
+    -- update the comboMeter depending on how close we overtake other vehicles
+    for i = 2, ac.getSim().carsCount do
+        local car = ac.getCarState(i)
+
+        -- ac.debug(car.collidedWith .. " COLLISION")
+        -- if player passed a vehicle within a normal range
+        if car.position:closerToThan(player.position, overtakeDistance) then
+            local drivingAlong = math.dot(car.look, player.look) > 0.2
+            if not drivingAlong then
+                -- if player has passed a vehicle super close
+                if --[[not state.nearMiss and]] car.position:closerToThan(player.position, closeOvertakeDistance) then
+                    -- state.nearMiss = true
+                    debugMsg('[CLOSE_OVERTAKE_DISTANCE]', 'nearmiss')
+                end
+            end
+
+            -- if not state.overtaken and not state.collided and state.drivingAlong then
+                local posDir = (car.position - player.position):normalize()
+                local posDot = math.dot(posDir, car.look)
+                debugMsg('[POS_DOT]', tostring(posDot))
+                -- state.maxPosDot = math.max(state.maxPosDot, posDot)
+                -- if posDot < -0.5 and state.maxPosDot > 0.5 then
+                    -- totalScore = totalScore + math.ceil(10 * comboMeter)
+                    -- comboMeter = comboMeter + 1
+                    -- comboColor = comboColor + 90
+
+                    -- playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
+                    addMessage('Overtake 1x', 1)
+                    -- state.overtaken = true -- dont allow multiple overtakes of same vehicle
+
+                    -- if car.position:closerToThan(player.position, closeOvertakeDistance) then
+                    --     comboMeter = comboMeter + 3
+                    --     comboColor = comboColor + math.random(1, 90)
+                    --     comboColor = comboColor + 90
+
+                    --     playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
+                    --     addMessage(CloseMessages[math.random(#CloseMessages)], 2)
+                    -- end
+
+                -- end
+            -- end
+
+        else
+            -- state.maxPosDot = -1
+            -- state.overtaken = false
+            -- state.collided = false
+            -- state.drivingAlong = true
+            -- state.nearMiss = false
+        end
+    end
+end
+
 function Run:handler(timeElapsed)
     -- check if the player has collided
     self:crashHandler()
