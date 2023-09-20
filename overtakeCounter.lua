@@ -753,7 +753,8 @@ if file then
     file:write("This is some text.\n")
     file:write("This is another line of text.\n")
     file:close()
+    debugMsg("[FILE_IO]", 'wrote some shit boi')
 else
-    print("Error opening file:", err)
+    debugMsg("[FILE_IO]", 'Error opening file: ' .. tostring(err))
 end
 
