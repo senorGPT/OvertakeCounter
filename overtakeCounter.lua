@@ -268,6 +268,7 @@ function Run:new()
         fastestSpeed    = 0,
         active          = false,
         over            = false,
+        overReason      = '',
         player          = ac.getCarState(1),
         carStates       = {},
         slowTimer       = Timer:new()
@@ -290,6 +291,7 @@ function Run:reset()
     self.fastestSpeed   = 0
     self.active         = false
     self.over           = false
+    self.overReason     = ''
     self.player         = ac.getCarState(1)
     self.carStates      = {}
     self.slowTimer:reset()
@@ -304,13 +306,16 @@ function Run:isOver()
     return self.over
 end
 
-function Run:setOver()
+function Run:setOver(reason)
     self.over = true
     self.active = false
+    self.overReason = reason
 end
 
 function Run:crashHandler()
-    self.over = self.active and self.player.collidedWith == 0
+    if self.active and self.player.collidedWith == 0 then
+        self:setOver('crashed')
+    end
     --TODO addMessage(MackMessages[math.random(1, #MackMessages)], -1)   ... wrap in an if?
 end
 
@@ -322,7 +327,7 @@ function Run:speedHandler(timeElapsed)
         end
 
         if self.slowTimer:isTimedOut() then
-            Run:setOver()
+            self:setOver('slow timer timedout')
             return
         end
     end
@@ -522,7 +527,7 @@ function Client:handler()
     self.current_run:handler()
 
     if self.current_run:isOver() then
-        debugMsg('[RUN_OVER]', 'we need to get the reason why ' .. tostring(self.time_elapsed))
+        debugMsg('[RUN_OVER]', tostring(self.current_run.overReason) .. ' : ' .. tostring(self.time_elapsed))
         table.insert(self.runs, self.current_run)
 
         -- check if current_run is a `best run`
