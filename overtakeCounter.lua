@@ -194,6 +194,7 @@ end
 function Timer:restart(currentTime, timeOutSeconds)
     if not self.active then return end
     self.time = currentTime
+    --! BUG HERE
     self.timeOut = currentTime + timeOutSeconds
 end
 
@@ -217,6 +218,7 @@ end
 function Timer:tick(currentTime)
     if not self.active then return end
 
+    --! BUG HERE, self.time = currentTime and self.timeOut = currentTime + timeOutSeconds
     if (self.time + self.timeOut) >= currentTime then
         self.timedOut = true
         self.active = false
