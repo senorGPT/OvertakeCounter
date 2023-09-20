@@ -310,6 +310,7 @@ function Run:overtakeHandler()
     -- update the comboMeter depending on how close we overtake other vehicles
     for i = 2, ac.getSim().carsCount do
         local car = ac.getCarState(i)
+        local player = ac.getCarState(1)
 
         -- ac.debug(car.collidedWith .. " COLLISION")
         -- if player passed a vehicle within a normal range
