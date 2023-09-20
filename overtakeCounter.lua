@@ -350,17 +350,17 @@ function Client:new()
 end
 
 function Client:hasKeypressTimedOut()
-    local returnBoolean = false
+    debugMsg('[hasKeypressTimedOut()]', tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
     if self.last_key.key == nil then --! .key or .time?
         debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true | ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
         return true
     end
     if self.last_key.time >= self.time_elapsed then
         debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true >=')
-        returnBoolean = true
+        return true
     end
     debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'false')
-    return returnBoolean
+    return false
 end
 
 function Client:canPressButton(targetButton)
