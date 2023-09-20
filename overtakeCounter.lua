@@ -334,7 +334,8 @@ function Run:overtakeHandler()
         local car = ac.getCarState(i)
         local player = ac.getCarState(1)
 
-        -- ac.debug(car.collidedWith .. " COLLISION")
+        debugMsg('[GET_SIM_CARS_COUNT]', tostring(ac.getSim().carsCount))
+
         -- if player passed a vehicle within a normal range
         if car.position:closerToThan(player.position, overtakeDistance) then
             local drivingAlong = math.dot(car.look, player.look) > 0.2
@@ -393,7 +394,7 @@ function Run:handler(timeElapsed)
     -- TODO handle overtakes
     self:overtakeHandler()
 
-    -- TODO handle combo & score
+    -- TODO handle combo & score .. isnt this done in the overtake handlers??
 
     self.slowTimer:tick(timeElapsed)
 end
@@ -593,7 +594,8 @@ end
 local function keypressEventResetVehicle(args)
     local player = ac.getCarState(1)
 
-    --TODO check if player is stopped or barely moving before allowing to reset
+    -- check if player is stopped or barely moving before allowing to reset
+    if player.speedKmh > 15 then return end
 
     debugMsg("[KEYPRESS] - resetVehicle", args.keypressCounter)
     args.keypressCounter = args.keypressCounter + 1
