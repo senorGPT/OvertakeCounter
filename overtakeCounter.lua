@@ -154,7 +154,6 @@ function Timer:new()
     local instance = {
         active = false,
         time = 0,
-        timeOut = 0,
         callback = nil,
         timedOut = false
     }
@@ -162,11 +161,10 @@ function Timer:new()
     return setmetatable(instance, self)
 end
 
-function Timer:new_(active, time, timeOut, callback)
+function Timer:new_(active, time, callback)
     local instance = {
         active = active,
         time = time,
-        timeOut = timeOut,
         callback = callback,
         timedOut = false
     }
@@ -174,18 +172,17 @@ function Timer:new_(active, time, timeOut, callback)
     return setmetatable(instance, self)
 end
 
-function Timer:init(active, time, timeOut, callback)
+function Timer:init(active, time, callback)
     self.active = active
     self.time = time
-    self.timeOut = timeOut
     self.callback = callback
     self.timedOut = false
 end
 
 function Timer:start(currentTime, timeOutSeconds, callback)
     self.active = true
-    self.time = currentTime
-    self.timeOut = currentTime + timeOutSeconds
+    self.time = currentTime + timeOutSeconds
+
     if callback then
         self.callback = callback
     end
@@ -193,9 +190,7 @@ end
 
 function Timer:restart(currentTime, timeOutSeconds)
     if not self.active then return end
-    self.time = currentTime
-    --! BUG HERE
-    self.timeOut = currentTime + timeOutSeconds
+    self.time = currentTime + timeOutSeconds
 end
 
 function Timer:isActive()
@@ -209,7 +204,6 @@ end
 function Timer:reset(hardReset)
     self.active = false
     self.time = 0
-    self.timeOut = 0
     self.timedOut = false
 
     if hardReset then self.callback = nil end
@@ -218,11 +212,9 @@ end
 function Timer:tick(currentTime)
     if not self.active then return end
 
-    --! BUG HERE, self.time = currentTime and self.timeOut = currentTime + timeOutSeconds
-    if (self.time + self.timeOut) >= currentTime then
+    if currentTime >= self.time then
         self.timedOut = true
         self.active = false
-        return
     end
 end
 
