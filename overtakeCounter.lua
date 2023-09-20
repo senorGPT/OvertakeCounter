@@ -318,6 +318,7 @@ function Run:overtakeHandler()
         -- if player passed a vehicle within a normal range
         if car.position:closerToThan(player.position, overtakeDistance) then
             local drivingAlong = math.dot(car.look, player.look) > 0.2
+            debugMsg('[DRIVING_ALONG]', tostring(drivingAlong))
             if not drivingAlong then
                 -- if player has passed a vehicle super close
                 if --[[not state.nearMiss and]] car.position:closerToThan(player.position, closeOvertakeDistance) then
