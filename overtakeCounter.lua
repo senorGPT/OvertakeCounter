@@ -103,16 +103,19 @@ CONFIG.controls = {
     adjustUI        = {
         key     = ac.KeyIndex.B,
         keyName = 'B',
+        timeout = 1.0,
         message = 'UI Move mode '
     },
     resetVehicle    = {
         key     = ac.KeyIndex.Delete,
         keyName = 'Delete',
+        timeout = 1.0,
         message = 'Vehicle Reset & Re-Oriented!'
     },
     toggleSounds    = {
         key     = ac.KeyIndex.M,
         keyName = 'M',
+        timeout = 1.0,
         message = 'Sounds '
     }
 }
@@ -238,7 +241,6 @@ function Run:new()
         score           = 0,
         combo           = 1,
         timeStarted     = 0,
-        timeElapsed     = 0, --! might be a useless variable
         overtakes       = 0,
         fastestSpeed    = 0,
         active          = false,
@@ -254,7 +256,6 @@ function Run:reset()
     self.score          = 0
     self.combo          = 1
     self.timeStarted    = 0
-    self.timeElapsed    = 0 --! might be a useless variable
     self.overtakes      = 0
     self.fastestSpeed   = 0
     self.active         = false
@@ -349,7 +350,7 @@ end
 
 function Client:hasKeypressTimedOut()
     debugMsg('[hasKeypressTimedOut()]', tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
-    if self.last_key.key == nil then --! .key or .time?
+    if self.last_key.time == nil then --! .key or .time?
         debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true | ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
         return true
     end
@@ -386,7 +387,7 @@ function Client:canPressButton(targetButton)
     return returnBoolean
 end
 
-function Client:resetLastKey()
+function Client:resetKey()
     self.last_key.key = nil
     self.last_key.time = nil
 end
@@ -402,7 +403,7 @@ function Client:keypressTimeOutHandler()
     debugMsg('[keypressTimeOutHandler()2]', tostring(self:hasKeypressTimedOut()) .. ' : ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
         debugMsg('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
-        self:resetLastKey()
+        self:resetKey()
     end
 end
 
@@ -515,12 +516,10 @@ end
 local function keypressListeners()
     for _, keypressData in pairs(KEYPRESS_EVENTS) do
         -- TODO i dont think this needs to be a variable
-        local isKeyPressedDown = ac.isKeyDown(keypressData.key)
+        -- local isKeyPressedDown = ac.isKeyDown(keypressData.key)
 
-        if isKeyPressedDown and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
-            --! probably need to make a variable for each keypress on how long to wait before user can press again
-            --! CLIENT.last_key.timeOut?
-            CLIENT:setKey(keypressData.keyName, (CLIENT.time_elapsed + 1.0))
+        if ac.isKeyDown(keypressData.key) and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
+            CLIENT:setKey(keypressData.keyName, (CLIENT.time_elapsed + keypressData.timeout))
 
             -- initiate callback with specified callback args
             keypressData.event(keypressData.args)
@@ -575,6 +574,7 @@ KEYPRESS_EVENTS = {
         name    = 'adjustUI',
         key     = CONFIG.controls.adjustUI.key,
         keyName = CONFIG.controls.adjustUI.keyName,
+        timeout = CONFIG.controls.adjustUI.timeout,
         IIFE    = clickListenerAdjustUI
     },
     resetVehicle    = {
@@ -586,6 +586,7 @@ KEYPRESS_EVENTS = {
         name    = 'Reset Vehicle',
         key     = CONFIG.controls.resetVehicle.key,
         keyName = CONFIG.controls.resetVehicle.keyName,
+        timeout = CONFIG.controls.resetVehicle.timeout,
         IIFE    = nil
     },
     toggleSounds    = {
@@ -598,6 +599,7 @@ KEYPRESS_EVENTS = {
         name    = 'toggleSounds',
         key     = CONFIG.controls.toggleSounds.key,
         keyName = CONFIG.controls.toggleSounds.keyName,
+        timeout = CONFIG.controls.toggleSounds.timeout,
         IIFE    = nil
     }
 }
