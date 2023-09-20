@@ -355,6 +355,7 @@ function Client:hasKeypressTimedOut()
         debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true | ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
         return true
     end
+    --!! FUCKING BUG IS RIGHT HERE, WE ARE COMPARING IF FUTURE TIME IS GREATER THAN CURRENT TIME >:(
     if self.last_key.time >= self.time_elapsed then
         debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true : ' .. tostring(self.last_key.time) .. ' >= ' .. tostring(self.time_elapsed))
         return true
