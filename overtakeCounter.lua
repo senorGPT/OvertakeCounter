@@ -368,9 +368,8 @@ function Run:speedHandler(timeElapsed)
     end
 end
 
+-- TODO: rework and rewrite this function
 function Run:overtakeHandler()
-    --TODO move into config
-    local closeOvertakeDistance = 4
     local overtakeDistance = 9
 
     -- update the comboMeter depending on how close we overtake other vehicles
@@ -379,6 +378,7 @@ function Run:overtakeHandler()
         local player = ac.getCarState(1)
 
 
+        -- TODO write function to iterate through overtake levels
         -- if player passed a vehicle within a normal range
         if car.position:closerToThan(player.position, overtakeDistance) then
             if self.carStates[i].overtaken then
@@ -746,3 +746,14 @@ end
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
+
+local file, err = io.open("filename.txt", "w")  -- 'w' mode for writing
+
+if file then
+    file:write("This is some text.\n")
+    file:write("This is another line of text.\n")
+    file:close()
+else
+    print("Error opening file:", err)
+end
+
