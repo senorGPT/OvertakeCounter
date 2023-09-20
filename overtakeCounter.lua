@@ -349,42 +349,29 @@ function Client:new()
 end
 
 function Client:hasKeypressTimedOut()
-    debugMsg('[hasKeypressTimedOut()]', tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
-    if self.last_key.time == nil then --! .key or .time?
-        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true | ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
+    if self.last_key.time == nil then
         return true
     end
-    --!! FUCKING BUG IS RIGHT HERE, WE ARE COMPARING IF FUTURE TIME IS GREATER THAN CURRENT TIME >:(
     if self.time_elapsed >= self.last_key.time then
-        debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'true : ' .. tostring(self.time_elapsed) .. ' >= ' .. tostring(self.last_key.time))
         return true
     end
-    debugMsg('[HAS_KEYPRESS_TIMEDOUT]', 'false')
     return false
 end
 
 function Client:canPressButton(targetButton)
-    local returnBoolean = false
     -- no key has been pressed
     if self.last_key.key == nil then
-        returnBoolean = true
-        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key == nil')
-        debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
         return true
     end
     -- key is different than the last key pressed
     if self.last_key.key ~= targetButton then
-        returnBoolean = true
-        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self.last_key.key ~= targetButton')
+        return true
     end
     -- the timeout for the keypress has elapsed
     if self:hasKeypressTimedOut() then
-        returnBoolean = true
-        debugMsg('[CAN_PRESS_BUTTON_RETURN]', 'self:hasKeypressTimedOut()')
+        return true
     end
-    debugMsg('[CAN_PRESS_BUTTON]', returnBoolean)
-    --TODO addMessage()?
-    return returnBoolean
+    return false
 end
 
 function Client:resetKey()
@@ -400,9 +387,7 @@ end
 
 function Client:keypressTimeOutHandler()
     debugMsg('[KEYPRESS_TIMER]', tostring(self.last_key.time))
-    debugMsg('[keypressTimeOutHandler()2]', tostring(self:hasKeypressTimedOut()) .. ' : ' .. tostring(self.last_key.key) .. ' : ' .. tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
-        debugMsg('[keypressTimeOutHandler()]', tostring(self.time_elapsed))
         self:resetKey()
     end
 end
@@ -515,9 +500,6 @@ end
 
 local function keypressListeners()
     for _, keypressData in pairs(KEYPRESS_EVENTS) do
-        -- TODO i dont think this needs to be a variable
-        -- local isKeyPressedDown = ac.isKeyDown(keypressData.key)
-
         if ac.isKeyDown(keypressData.key) and CLIENT:canPressButton(keypressData.keyName) --[[ inline comment :) ]] then
             CLIENT:setKey(keypressData.keyName, (CLIENT.time_elapsed + keypressData.timeout))
 
