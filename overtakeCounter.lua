@@ -335,7 +335,8 @@ function Run:overtakeHandler()
                     -- comboColor = comboColor + 90
 
                     -- playerMediaSound(mediaPlayers[3], soundTracks.noti, 1)
-                    addMessage('Overtake 1x', 1)
+                    --! addMessage is defined below
+                    --addMessage('Overtake 1x', 1)
                     -- state.overtaken = true -- dont allow multiple overtakes of same vehicle
 
                     -- if car.position:closerToThan(player.position, closeOvertakeDistance) then
