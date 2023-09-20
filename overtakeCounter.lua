@@ -470,6 +470,7 @@ function Client:handler()
     self.current_run:handler()
 
     if self.current_run:isOver() then
+        debugMsg('[RUN_OVER]', 'we need to get the reason why')
         table.insert(self.runs, self.current_run)
 
         -- check if current_run is a `best run`
