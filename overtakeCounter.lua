@@ -367,6 +367,7 @@ function Run:handler(timeElapsed)
     self:speedHandler(timeElapsed)
 
     -- TODO handle overtakes
+    self:overtakeHandler()
 
     -- TODO handle combo & score
 
