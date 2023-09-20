@@ -124,6 +124,7 @@ CONFIG.requiredSpeed                = 95    -- required speed for the counter to
 CONFIG.overtakeDistance             = 9     -- overtake distance between the player and other vehicles for it to count as sucessful overtake
 CONFIG.closeOvertakeDistance        = 4     -- close overtake distance
 CONFIG.superCloseOvertakeDistance   = 1     -- super close overtake distance
+CONFIG.slowTime                     = 5     -- amount of seconds of going underneath the speed limit before run resets
 CONFIG.debugMode                    = true  -- whether or not to print debug logs
 
 ----------------------------------------------------------------------------------------------------------------------------
@@ -276,8 +277,7 @@ function Run:speedHandler(timeElapsed)
     -- check if player is going less than the required speed
     if self.active and self.player.speedKmh < CONFIG.requiredSpeed then
         if not self.slowTimer:isActive() then
-            --TODO we need to make a configurable variable for amount of time
-            self.slowTimer:start(timeElapsed, 5)
+            self.slowTimer:start(timeElapsed, CONFIG.slowTime)
         end
 
         if self.slowTimer:isTimedOut() then
