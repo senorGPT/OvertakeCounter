@@ -474,9 +474,9 @@ function Client:helpMenu()
     -- only show help menu for the start of the script
     if self.time_elapsed == 0 then
         debugMsg("[STATUS]", "running... " .. ac.getCarName(0))
-        --TODO this
-        addMessage(ac.getCarName(0));
-        addMessage('Dexter is here boi' .. self.time_elapsed);
+        --TODO this + addMessage is defined below
+        -- addMessage(ac.getCarName(0));
+        -- addMessage('Dexter is here boi' .. self.time_elapsed);
     end
 end
 
