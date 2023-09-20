@@ -446,6 +446,10 @@ function Client:setKey(key, time)
     debugMsg('[SET_KEY]', tostring(self.last_key.key) .. ', ' .. tostring(self.last_key.time))
 end
 
+function Client:setUiPos(vec)
+    self.ui_pos = vec
+end
+
 function Client:keypressTimeOutHandler()
     debugMsg('[KEYPRESS_TIMER]', tostring(self.last_key.time))
     if self:hasKeypressTimedOut() and self.last_key.key ~= nil then
@@ -466,7 +470,18 @@ function Client:isCurrentRunBestRun()
     return flag_isBestRun
 end
 
+function Client:helpMenu()
+    -- only show help menu for the start of the script
+    if self.time_elapsed == 0 then
+        debugMsg("[STATUS]", "running... " .. ac.getCarName(0))
+        --TODO this
+        addMessage(ac.getCarName(0));
+        addMessage('Dexter is here boi' .. self.time_elapsed);
+    end
+end
+
 function Client:handler()
+    self:helpMenu()
     self.current_run:handler()
 
     if self.current_run:isOver() then
@@ -478,7 +493,7 @@ function Client:handler()
             self.best_run = #self.runs
         end
 
-        --TODO addMessage()?
+        --TODO addMessage()
 
         self.current_run = Run:new()
     end
@@ -489,6 +504,7 @@ end
 --------------------------------------------------------------------------------------------------------------------------
 --======================================================================================================================--
 --------------------------------------------------------------------------------------------------------------------------
+
 
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -515,6 +531,7 @@ local CLIENT = Client:new()
 --======================================================================================================================--
 --                                                   UI FUNCS                                                           --
 --======================================================================================================================--
+-- TODO: i think we need to move these two UI funcs above above defined classes
 -- TODO: rewrite this whonya
 local messages = {}
 local function addMessage(text)
@@ -534,16 +551,6 @@ local function updateMessages(dt)
     end
 end
 
-local function showHelpMenu()
-    -- only show help menu for the start of the script
-    if CLIENT.time_elapsed == 0 then
-        debugMsg("[STATUS]", "running... " .. ac.getCarName(0))
-        --TODO this
-        addMessage(ac.getCarName(0));
-        addMessage('Dexter is here boi' .. CLIENT.time_elapsed);
-    end
-end
-
 --======================================================================================================================--
 --                                                LOGIC FUNCS                                                           --
 --======================================================================================================================--
@@ -556,7 +563,7 @@ local function clickListenerAdjustUI(args)
         debugMsg("[CLICK] - adjustUI", args.clickCounter)
         args.clickCounter = args.clickCounter + 1
 
-        CLIENT.ui_pos = ui.mousePos()
+        CLIENT:setUiPos(ui.mousePos())
     end
 end
 
@@ -670,7 +677,7 @@ function script.update(deltaTime)
     -- Update plugin logic here
     debugMsg('[TIME_ELAPSED]', CLIENT.time_elapsed)
 
-    showHelpMenu()
+    -- showHelpMenu()
     keypressListeners()
 
     CLIENT:handler()
